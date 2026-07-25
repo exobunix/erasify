@@ -68,7 +68,7 @@ connectDB().catch(err => console.error('Initial DB connection failed:', err));
 
 // Middleware to ensure DB connection before handling API requests
 app.use(async (req, res, next) => {
-    if (req.path.startsWith('/api/')) {
+    if (req.path.startsWith('/api/') && req.path !== '/api/debug/db') {
         try {
             await connectDB();
             if (!db) {
