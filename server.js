@@ -88,6 +88,19 @@ async function getCurrentUser(req) {
     return await db.collection('users').findOne({ email });
 }
 
+// Debug endpoint to check DB connection status
+app.get('/api/debug/db', (req, res) => {
+    let maskedUri = 'not-set';
+    if (MONGODB_URI) {
+        maskedUri = MONGODB_URI.replace(/:([^@]+)@/, ':****@');
+    }
+    res.json({
+        nodeVersion: process.version,
+        maskedUri,
+        dbConnected: db !== null
+    });
+});
+
 // API Endpoints
 app.post('/api/auth/register', async (req, res) => {
     const { name, email, password } = req.body;
