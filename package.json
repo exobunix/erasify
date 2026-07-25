@@ -69,6 +69,7 @@
     }
   },
   "scripts": {
+    "start": "node server.js",
     "dev": "node build.js",
     "build": "node build.js --prod",
     "clean": "node scripts/clean.js",

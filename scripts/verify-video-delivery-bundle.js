@@ -750,7 +750,9 @@ export async function createVideoDeliveryBundleVerification({
             status: quickSuggestedAction?.acceptanceCommand &&
                 quickstartHtml.includes('id="suggested-review-actions"') &&
                 quickstartHtml.includes(`data-suggested-action-lane="${lane.id}"`) &&
-                quickstartHtml.includes(quickSuggestedAction.acceptanceCommand) ? 'pass' : 'fail',
+                (quickstartHtml.includes(quickSuggestedAction.acceptanceCommand) ||
+                 quickstartHtml.includes(quickSuggestedAction.acceptanceCommand.replace(/"/g, '&quot;')) ||
+                 quickstartHtml.includes(quickSuggestedAction.acceptanceCommand.replace(/"/g, '&#34;'))) ? 'pass' : 'fail',
             message: `${lane.id} quickstart HTML suggested action ${quickSuggestedAction?.decision || '-'}`
         });
         addCheck(checks, {

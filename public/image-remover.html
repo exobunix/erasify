@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Erasify - Remove Watermark from Image</title>
+  <meta name="description" content="Instantly remove Gemini logos and watermarks from images.">
+  <link rel="icon" href="logo.png" type="image/png">
+  <link rel="stylesheet" href="dev-preview.css">
+  <link rel="stylesheet" href="erasify.css">
+</head>
+<body class="bg-dark min-h-screen flex flex-col">
+
+  <!-- Header with integrated Navigation links -->
+  <header class="app-header">
+    <div class="container header-container">
+      <a href="./index.html" class="logo-wrapper">
+        <img src="logo.png" alt="Erasify Logo" class="logo-img">
+        <span class="logo-text">Erasify</span>
+      </a>
+
+      <!-- Navigation links in Header -->
+      <nav class="header-nav">
+        <a href="./index.html" class="header-link">Home</a>
+        <a href="./image-remover.html" class="header-link active">Remove Image Logo</a>
+        <a href="./video-remover.html" class="header-link">Remove Video Logo</a>
+        <a href="./pricing.html" class="header-link">Pricing</a>
+        <a href="./contact.html" class="header-link">Contact Us</a>
+      </nav>
+
+      <div class="header-actions">
+        <div class="nav-status">
+          <span class="pulse-dot"></span>
+          Online
+        </div>
+        <button onclick="openSignIn()" class="btn btn-text">Sign In</button>
+        <button onclick="openSignUp()" class="btn btn-primary">Register</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Image Remover Workspace -->
+  <main class="flex-grow pb-12">
+    <section class="hero container animate-fade-in" style="padding-top: 80px; padding-bottom: 40px;">
+      <span class="badge">One-Click Image Cleaner</span>
+      <h1 class="hero-title" style="font-size: clamp(28px, 4vw, 48px); margin-bottom: 16px;">Erase Image Watermarks</h1>
+      <p class="hero-subtitle" style="font-size: 16px; max-width: 600px; margin-bottom: 24px;">
+        Select single or multiple Gemini images. Compare before/after results with our sliding viewer and download instantly.
+      </p>
+
+      <!-- Upload Zone -->
+      <div class="glass-card" style="max-width: 800px; margin: 0 auto; padding: 6px; border-radius: 24px;">
+        <div id="uploadArea" class="group relative flex flex-col items-center justify-center w-full h-64 hover:bg-white/5 transition-colors cursor-pointer rounded-2xl" style="background: rgba(255,255,255,0.02); min-height: 240px; display: flex; flex-direction: column; align-items: center; justify-content: center; border: 2px dashed rgba(16,185,129,0.2); border-radius: 18px; position: relative;">
+          <div class="flex flex-col items-center justify-center relative z-10" style="padding: 40px;">
+            <div class="card-icon" style="margin: 0 auto 16px;">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+            </div>
+            <p class="mb-1 text-base font-bold text-white">Click or drag images here</p>
+            <p class="text-xs text-gray-500" style="margin-top: 4px;">Supports selecting multiple JPG, PNG, WebP files; video enters video flow</p>
+          </div>
+          <input type="file" id="fileInput" accept="image/jpeg,image/png,image/webp,video/mp4,video/webm,video/quicktime,video/*" multiple class="hidden" style="display: none;" />
+        </div>
+      </div>
+    </section>
+
+    <!-- Single File Comparison Block -->
+    <section id="singlePreview" class="container" style="display: none; margin-top: 40px;">
+      <div class="tool-split" style="grid-template-columns: 1fr 300px; gap: 32px;">
+        <div class="glass-card" style="padding: 0; overflow: hidden; display: flex; flex-direction: column;">
+          <div class="bg-black/40 px-6 py-4 border-b border-white/10 flex justify-between items-center" style="display: flex; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,0.1); padding: 16px 24px;">
+            <h3 class="text-sm font-bold text-gray-300">Interactive Comparison</h3>
+            <div style="display: flex; gap: 16px;">
+              <span id="originalInfo" class="text-xs text-gray-400 font-mono"></span>
+              <span id="processedInfo" class="text-xs text-emerald-400 font-mono" style="display: none;"></span>
+            </div>
+          </div>
+
+          <div class="relative w-full flex-1 flex items-center justify-center bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMCIgaGVpZ2h0PSIyMCIgZmlsbD0iI2Y5ZmRmZCI+PHJlY3Qgd2lkdGg9IjEwIiBoZWlnaHQ9IjEwIiBmaWxsPSIjZjJmMmYyIi8+PHJlY3QgeD0iMTAiIHk9IjEwIiB3aWR0aD0iMTAiIGhlaWdodD0iMTAiIGZpbGw9IiNmMmYyZjIiLz48L3N2Zz4=')] select-none group min-h-[400px]" style="position: relative; display: flex; justify-content: center; align-items: center; min-height: 450px; background: rgba(0,0,0,0.2);">
+            <div id="comparisonContainer" class="relative mx-auto w-fit max-w-full" style="position: relative; overflow: hidden; max-height: 65vh;">
+              <img id="originalImage" class="block w-auto h-auto max-w-full max-h-[65vh] object-contain object-right-bottom" draggable="false" style="display: block; max-width: 100%; max-height: 65vh;" />
+              <div id="processedOverlay" class="absolute top-0 left-0 h-full w-[50%] overflow-hidden border-r-[1.5px] border-white shadow-[1px_0_4px_rgba(0,0,0,0.15)] box-content z-10" style="position: absolute; top:0; left:0; height:100%; width: 50%; overflow:hidden; border-right: 1.5px solid #fff; z-index:10; display: none;">
+                <img id="processedImage" class="block h-full max-w-none object-contain object-right-bottom" draggable="false" style="height: 100%; display: block;" />
+              </div>
+              <div id="sliderHandle" class="absolute top-0 bottom-0 w-10 -ml-5 z-20 cursor-col-resize flex items-center justify-center group-hover:opacity-100 transition-opacity" style="position: absolute; top:0; bottom:0; width: 40px; margin-left: -20px; z-index:20; cursor: col-resize; display: none; align-items: center; justify-content: center; left: 50%;">
+                <div style="width: 32px; height: 32px; background: var(--primary); border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 2px solid #fff; box-shadow: 0 4px 10px rgba(0,0,0,0.3);">
+                  <svg class="w-4 h-4 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width: 16px; height:16px;"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M8 9l-3 3 3 3m8-6l3 3-3 3"></path></svg>
+                </div>
+              </div>
+              <div style="position: absolute; top: 12px; left: 12px; background: rgba(0,0,0,0.85); color: var(--primary); font-size: 11px; font-weight: 800; padding: 4px 12px; border-radius: 99px; z-index: 30; border: 1px solid rgba(16,185,129,0.2);">Processed</div>
+              <div style="position: absolute; top: 12px; right: 12px; background: rgba(0,0,0,0.85); color: #fff; font-size: 11px; font-weight: 800; padding: 4px 12px; border-radius: 99px; z-index: 30; border: 1px solid rgba(255,255,255,0.1);">Original</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="glass-card" style="padding: 24px; display: flex; flex-direction: column; justify-content: flex-start; height: fit-content;">
+          <h4 class="card-title" style="font-size: 16px; margin-bottom: 16px; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 12px;">Workspace Actions</h4>
+          <div style="display: flex; flex-direction: column; gap: 12px;">
+            <button id="copyBtn" class="btn btn-primary w-full" style="display: none; padding: 12px;">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width:16px; height:16px; margin-right: 8px;"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m-1 10H8m4-3H8m1.5 6H8"></path></svg>
+              Copy Result
+            </button>
+
+            <button id="downloadBtn" class="btn btn-secondary w-full" style="display: none; padding: 12px;">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width:16px; height:16px; margin-right: 8px;"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+              Download Result
+            </button>
+
+            <button id="resetBtn" class="btn btn-secondary w-full" style="padding: 12px;">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width:16px; height:16px; margin-right: 8px;"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+              Change File
+            </button>
+          </div>
+          <div id="statusMessage" class="footer-text" style="margin-top: 20px; font-size: 12px; padding: 12px; background: rgba(0,0,0,0.3); border-radius: 8px; min-height: 40px; border: 1px solid rgba(255,255,255,0.05);"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Batch File Preview Block -->
+    <section id="multiPreview" class="container" style="display: none; margin-top: 40px;">
+      <div class="glass-card" style="padding: 0; overflow: hidden;">
+        <div class="bg-black/40 px-6 py-4 border-b border-white/10 flex justify-between items-center" style="display: flex; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,0.1); padding: 16px 24px;">
+          <div>
+            <h3 class="text-sm font-bold text-white">Batch Preview</h3>
+            <p id="progressText" class="text-xs text-emerald-400" style="margin-top: 4px;">Progress: 0/0</p>
+          </div>
+          <button id="batchResetBtn" class="btn btn-secondary" style="padding: 6px 16px; font-size: 13px;">
+            Change File
+          </button>
+        </div>
+        <div id="imageList" class="batch-list p-6" style="padding: 24px;"></div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Sign In Modal -->
+  <div id="signInModal" class="auth-modal">
+    <div class="auth-card">
+      <button onclick="closeAuthModals()" class="modal-close">✕</button>
+      <h3 class="tool-teaser-title" style="margin-bottom: 24px; text-align: center;">Sign In to Erasify</h3>
+      <form class="space-y-4">
+        <div class="form-group">
+          <label class="form-label">Email Address</label>
+          <input type="email" required placeholder="name@example.com" class="form-control">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Password</label>
+          <input type="password" required placeholder="••••••••" class="form-control">
+        </div>
+        <button type="submit" class="btn btn-primary w-full" style="margin-top: 12px;">Sign In</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Sign Up Modal -->
+  <div id="signUpModal" class="auth-modal">
+    <div class="auth-card">
+      <button onclick="closeAuthModals()" class="modal-close">✕</button>
+      <h3 class="tool-teaser-title" style="margin-bottom: 24px; text-align: center;">Create Account</h3>
+      <form class="space-y-4">
+        <div class="form-group">
+          <label class="form-label">Full Name</label>
+          <input type="text" required placeholder="Your Name" class="form-control">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Email Address</label>
+          <input type="email" required placeholder="name@example.com" class="form-control">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Password</label>
+          <input type="password" required placeholder="Create Password" class="form-control">
+        </div>
+        <button type="submit" class="btn btn-primary w-full" style="margin-top: 12px;">Register</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="app-footer">
+    <div class="container footer-grid">
+      <div>
+        <a href="./index.html" class="logo-wrapper" style="margin-bottom: 16px;">
+          <img src="logo.png" alt="Erasify Logo" class="logo-img" style="height: 36px; width: 36px;">
+          <span class="logo-text" style="font-size: 22px;">Erasify</span>
+        </a>
+        <p class="footer-text">Clean and premium digital media assets. Local de-watermarking Sandbox operations ensure absolute safety for files.</p>
+      </div>
+      <div>
+        <h4 class="footer-title">Bespoke Softwares</h4>
+        <p class="footer-text">Need high-quality digital solutions or platforms? Contact Avdar Innovations pvt today to build bespoke systems.</p>
+      </div>
+      <div>
+        <h4 class="footer-title">Direct Contact</h4>
+        <p class="footer-text">Call / WhatsApp us:</p>
+        <p class="contact-phone">9967853364</p>
+      </div>
+    </div>
+    <div class="container footer-bottom">
+      &copy; 2026 Erasify. Powered by Avdar Innovations pvt limited. Get any kind of website and software contact us today.
+    </div>
+  </footer>
+
+  <div id="loadingOverlay" class="fixed inset-0 bg-white/80 backdrop-blur-sm z-[60] hidden flex items-center justify-center" style="position: fixed; inset:0; z-index: 250; background: rgba(0,0,0,0.8); backdrop-filter: blur(8px); display: none; align-items: center; justify-content: center;">
+    <div style="text-align: center;">
+      <div style="border: 4px solid rgba(16,185,129,0.1); border-top: 4px solid var(--primary); border-radius: 50%; width: 48px; height: 48px; animation: spin 1s linear infinite; margin: 0 auto 16px;"></div>
+      <p style="font-family: var(--font-display); font-weight: 700; color: #fff;">Processing Image...</p>
+    </div>
+  </div>
+  <style>
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+  </style>
+
+  <script src="erasify.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

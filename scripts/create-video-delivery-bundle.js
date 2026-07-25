@@ -70,7 +70,7 @@ function createLaneAcceptancePlan({ dashboardLane = {}, goalLane = {}, decisionT
     const suggestedDecision = suggestedDecisionForLane(laneId);
     const decisionInputPath = decisionTemplatePath || '<exported-review-decision.json>';
     const command = dashboardLane.decisionCommand || (decisionJsonPath && decisionReportPath
-        ? `pnpm report:video-review-decision -- --decision ${decisionInputPath} --output ${decisionJsonPath} --markdown ${decisionReportPath}`
+        ? `pnpm report:video-review-decision -- --decision "${decisionInputPath}" --output "${decisionJsonPath}" --markdown "${decisionReportPath}"`
         : null);
     return {
         id: laneId,

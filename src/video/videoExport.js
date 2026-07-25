@@ -915,7 +915,7 @@ export async function removeGeminiVideoWatermark(file, options = {}) {
     onProgress({ phase: 'detect', progress: 1, metadata, detection });
 
     if (!detection.isConfident && options.allowLowConfidence !== true) {
-        throw new Error('视频水印检测置信度偏低，已停止导出。可打开低置信导出后重试。');
+        throw new Error('Video watermark detection confidence is too low, exporting stopped. You can enable low-confidence export and try again.');
     }
 
     const videoEncodingConfig = createVideoExportEncodingConfig(videoBitrate);

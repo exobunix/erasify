@@ -180,7 +180,7 @@ function renderFileLink(label, filePath, outputPath) {
 
 function createDecisionCommand(lane = {}) {
     if (!lane.decisionTemplatePath || !lane.decisionJsonPath || !lane.decisionReportPath) return null;
-    return `pnpm report:video-review-decision -- --decision ${path.resolve(lane.decisionTemplatePath)} --output ${path.resolve(lane.decisionJsonPath)} --markdown ${path.resolve(lane.decisionReportPath)}`;
+    return `pnpm report:video-review-decision -- --decision "${path.resolve(lane.decisionTemplatePath)}" --output "${path.resolve(lane.decisionJsonPath)}" --markdown "${path.resolve(lane.decisionReportPath)}"`;
 }
 
 function renderCopyableCommand(command = null) {

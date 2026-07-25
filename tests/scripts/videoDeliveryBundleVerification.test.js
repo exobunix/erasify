@@ -165,7 +165,7 @@ async function createFixture(root, { missingAlphaReview = false } = {}) {
             decisionReportPath: paths.currentDecisionMd,
             suggestedDecision: 'accept',
             suggestedDecisionOptions: ['accept', 'needs-polish', 'reject'],
-            command: `pnpm report:video-review-decision -- --decision ${paths.currentTemplate} --output ${paths.currentDecisionJson} --markdown ${paths.currentDecisionMd}`
+            command: `pnpm report:video-review-decision -- --decision "${paths.currentTemplate}" --output "${paths.currentDecisionJson}" --markdown "${paths.currentDecisionMd}"`
         },
         {
             id: 'alphaPolicy035',
@@ -179,7 +179,7 @@ async function createFixture(root, { missingAlphaReview = false } = {}) {
             decisionReportPath: paths.alphaDecisionMd,
             suggestedDecision: 'prefer-alpha-policy035',
             suggestedDecisionOptions: ['prefer-alpha-policy035', 'prefer-current', 'needs-more-polish', 'reject-both'],
-            command: `pnpm report:video-review-decision -- --decision ${paths.alphaTemplate} --output ${paths.alphaDecisionJson} --markdown ${paths.alphaDecisionMd}`
+            command: `pnpm report:video-review-decision -- --decision "${paths.alphaTemplate}" --output "${paths.alphaDecisionJson}" --markdown "${paths.alphaDecisionMd}"`
         }
     ];
     const dashboard = {

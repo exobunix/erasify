@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Erasify - Contact Us & Bespoke Software Development</title>
+  <meta name="description" content="Reach out to Erasify or Avdar Innovations pvt limited for custom websites and software.">
+  <link rel="icon" href="logo.png" type="image/png">
+  <link rel="stylesheet" href="erasify.css">
+</head>
+<body class="bg-dark min-h-screen flex flex-col">
+
+  <!-- Header with integrated Navigation links -->
+  <header class="app-header">
+    <div class="container header-container">
+      <a href="./index.html" class="logo-wrapper">
+        <img src="logo.png" alt="Erasify Logo" class="logo-img">
+        <span class="logo-text">Erasify</span>
+      </a>
+
+      <!-- Navigation links in Header -->
+      <nav class="header-nav">
+        <a href="./index.html" class="header-link">Home</a>
+        <a href="./image-remover.html" class="header-link">Remove Image Logo</a>
+        <a href="./video-remover.html" class="header-link">Remove Video Logo</a>
+        <a href="./pricing.html" class="header-link">Pricing</a>
+        <a href="./contact.html" class="header-link active">Contact Us</a>
+      </nav>
+
+      <div class="header-actions">
+        <div class="nav-status">
+          <span class="pulse-dot"></span>
+          Online
+        </div>
+        <button onclick="openSignIn()" class="btn btn-text">Sign In</button>
+        <button onclick="openSignUp()" class="btn btn-primary">Register</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Contact Portal -->
+  <main class="flex-grow pb-20">
+    <div class="container hero animate-fade-in" style="padding-top: 80px; padding-bottom: 40px;">
+      <span class="badge">Partner with Us</span>
+      <h1 class="hero-title" style="font-size: clamp(28px, 4vw, 48px); margin-bottom: 16px;">Get In Touch</h1>
+      <p class="hero-subtitle" style="font-size: 16px; max-width: 600px; margin-bottom: 24px;">
+        Contact Avdar Innovations pvt limited to build high-end custom software solutions or query about Erasify subscription plans.
+      </p>
+    </div>
+
+    <div class="container">
+      <div class="tool-split" style="gap: 48px; align-items: start;">
+        
+        <!-- Contact Info / Avdar Innovations Promo -->
+        <div>
+          <h2 class="tool-teaser-title" style="text-align: left; margin-bottom: 20px;">Custom Website & Software Development</h2>
+          <p class="footer-text" style="font-size: 16px; margin-bottom: 32px; line-height: 1.7;">
+            Erasify is proudly powered by <strong>Avdar Innovations pvt limited</strong>. We build world-class, bespoke digital platforms, enterprise software, SaaS products, mobile applications, and high-performance websites.
+          </p>
+
+          <div style="display: flex; flex-direction: column; gap: 24px;">
+            <div style="display: flex; gap: 16px; align-items: center;">
+              <div class="card-icon" style="margin: 0; width: 48px; height: 48px; border-radius: 12px;">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width: 20px; height: 20px;"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.94.725l.548 2.2a1 1 0 01-.321.988l-1.305.98a10.582 10.582 0 004.872 4.872l.98-1.305a1 1 0 01.988-.321l2.2.548a1 1 0 01.725.94V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path></svg>
+              </div>
+              <div>
+                <p style="font-size: 12px; color: var(--text-muted);">Contact Number (Call / WhatsApp)</p>
+                <p class="contact-phone" style="margin-top: 2px;">9967853364</p>
+              </div>
+            </div>
+
+            <div style="display: flex; gap: 16px; align-items: center;">
+              <div class="card-icon" style="margin: 0; width: 48px; height: 48px; border-radius: 12px;">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width: 20px; height: 20px;"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>
+              </div>
+              <div>
+                <p style="font-size: 12px; color: var(--text-muted);">Corporate Developer</p>
+                <p style="font-size: 16px; font-weight: 700; color: #fff; margin-top: 2px;">Avdar Innovations pvt limited</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Contact Form Card -->
+        <div class="glass-card" style="padding: 40px;">
+          <h3 class="card-title" style="margin-bottom: 24px; font-size: 20px;">Send us a Message</h3>
+          <form onsubmit="event.preventDefault(); alert('Message sent! Our team will contact you shortly.'); this.reset();" style="display: flex; flex-direction: column; gap: 16px;">
+            <div class="form-group" style="margin: 0;">
+              <label class="form-label">Your Name</label>
+              <input type="text" required class="form-control">
+            </div>
+            <div class="form-group" style="margin: 0;">
+              <label class="form-label">Email Address</label>
+              <input type="email" required class="form-control">
+            </div>
+            <div class="form-group" style="margin: 0;">
+              <label class="form-label">Subject</label>
+              <select class="form-control" style="background: rgba(255,255,255,0.05); border: 1px solid var(--border-glass); height: 48px; border-radius: 12px; color: #fff; width: 100%; padding: 0 16px;">
+                <option value="software" class="bg-dark text-white" style="background: var(--bg-dark);">Custom Website/Software Development</option>
+                <option value="billing" class="bg-dark text-white" style="background: var(--bg-dark);">Erasify Plan Billing</option>
+                <option value="support" class="bg-dark text-white" style="background: var(--bg-dark);">Technical Support</option>
+              </select>
+            </div>
+            <div class="form-group" style="margin: 0;">
+              <label class="form-label">Message</label>
+              <textarea required rows="4" class="form-control" style="padding: 12px;"></textarea>
+            </div>
+            <button type="submit" class="btn btn-primary w-full" style="padding: 14px; margin-top: 8px;">Submit Query</button>
+          </form>
+        </div>
+
+      </div>
+    </div>
+  </main>
+
+  <!-- Sign In Modal -->
+  <div id="signInModal" class="auth-modal">
+    <div class="auth-card">
+      <button onclick="closeAuthModals()" class="modal-close">✕</button>
+      <h3 class="tool-teaser-title" style="margin-bottom: 24px; text-align: center;">Sign In to Erasify</h3>
+      <form class="space-y-4">
+        <div class="form-group">
+          <label class="form-label">Email Address</label>
+          <input type="email" required placeholder="name@example.com" class="form-control">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Password</label>
+          <input type="password" required placeholder="••••••••" class="form-control">
+        </div>
+        <button type="submit" class="btn btn-primary w-full" style="margin-top: 12px;">Sign In</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Sign Up Modal -->
+  <div id="signUpModal" class="auth-modal">
+    <div class="auth-card">
+      <button onclick="closeAuthModals()" class="modal-close">✕</button>
+      <h3 class="tool-teaser-title" style="margin-bottom: 24px; text-align: center;">Create Account</h3>
+      <form class="space-y-4">
+        <div class="form-group">
+          <label class="form-label">Full Name</label>
+          <input type="text" required placeholder="Your Name" class="form-control">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Email Address</label>
+          <input type="email" required placeholder="name@example.com" class="form-control">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Password</label>
+          <input type="password" required placeholder="Create Password" class="form-control">
+        </div>
+        <button type="submit" class="btn btn-primary w-full" style="margin-top: 12px;">Register</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="app-footer">
+    <div class="container footer-grid">
+      <div>
+        <a href="./index.html" class="logo-wrapper" style="margin-bottom: 16px;">
+          <img src="logo.png" alt="Erasify Logo" class="logo-img" style="height: 36px; width: 36px;">
+          <span class="logo-text" style="font-size: 22px;">Erasify</span>
+        </a>
+        <p class="footer-text">Clean and premium digital media assets. Local de-watermarking Sandbox operations ensure absolute safety for files.</p>
+      </div>
+      <div>
+        <h4 class="footer-title">Bespoke Softwares</h4>
+        <p class="footer-text">Need high-quality digital solutions or platforms? Contact Avdar Innovations pvt today to build bespoke systems.</p>
+      </div>
+      <div>
+        <h4 class="footer-title">Direct Contact</h4>
+        <p class="footer-text">Call / WhatsApp us:</p>
+        <p class="contact-phone">9967853364</p>
+      </div>
+    </div>
+    <div class="container footer-bottom">
+      &copy; 2026 Erasify. Powered by Avdar Innovations pvt limited. Get any kind of website and software contact us today.
+    </div>
+  </footer>
+
+  <script src="erasify.js"></script>
+</body>
+</html>

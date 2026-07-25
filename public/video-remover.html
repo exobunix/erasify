@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Erasify - Remove Watermark from Video</title>
+  <meta name="description" content="Instantly remove Gemini and Veo watermarks from videos.">
+  <link rel="icon" href="logo.png" type="image/png">
+  <link rel="stylesheet" href="video-preview.html">
+  <link rel="stylesheet" href="erasify.css">
+  <style>
+    /* Custom video interface overrides */
+    .compare-player {
+      background: #000;
+      border-radius: 16px;
+      overflow: hidden;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      border: 1px solid var(--border-glass);
+      min-height: 380px;
+    }
+    @media(max-width: 640px) {
+      .compare-player {
+        grid-template-columns: 1fr;
+      }
+    }
+    .compare-controls {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      background: rgba(0,0,0,0.4);
+      padding: 16px 24px;
+      border-top: 1px solid var(--border-glass);
+      border-radius: 0 0 16px 16px;
+    }
+    .play-toggle {
+      width: 32px;
+      height: 32px;
+      background: rgba(255,255,255,0.08);
+      border: 1px solid var(--border-glass);
+      border-radius: 50%;
+      cursor: pointer;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: var(--transition);
+    }
+    .play-toggle:hover {
+      background: var(--primary);
+      color: var(--bg-darker);
+    }
+    .play-toggle::before {
+      content: '▶';
+      font-size: 12px;
+    }
+    .play-toggle[data-playing="true"]::before {
+      content: '❚❚';
+      font-size: 11px;
+    }
+    .time-label {
+      font-family: var(--font-sans);
+      font-size: 13px;
+      color: var(--text-muted);
+      min-width: 70px;
+    }
+    #scrubber {
+      flex-grow: 1;
+      accent-color: var(--primary);
+      cursor: pointer;
+    }
+    .info-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+    }
+    @media(max-width: 768px) {
+      .info-grid {
+        grid-template-columns: 1fr;
+        gap: 16px;
+      }
+    }
+  </style>
+</head>
+<body class="bg-dark min-h-screen flex flex-col">
+
+  <!-- Header with integrated Navigation links -->
+  <header class="app-header">
+    <div class="container header-container">
+      <a href="./index.html" class="logo-wrapper">
+        <img src="logo.png" alt="Erasify Logo" class="logo-img">
+        <span class="logo-text">Erasify</span>
+      </a>
+
+      <!-- Navigation links in Header -->
+      <nav class="header-nav">
+        <a href="./index.html" class="header-link">Home</a>
+        <a href="./image-remover.html" class="header-link">Remove Image Logo</a>
+        <a href="./video-remover.html" class="header-link active">Remove Video Logo</a>
+        <a href="./pricing.html" class="header-link">Pricing</a>
+        <a href="./contact.html" class="header-link">Contact Us</a>
+      </nav>
+
+      <div class="header-actions">
+        <div class="nav-status">
+          <span class="pulse-dot"></span>
+          Online
+        </div>
+        <button onclick="openSignIn()" class="btn btn-text">Sign In</button>
+        <button onclick="openSignUp()" class="btn btn-primary">Register</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Video Remover Workspace -->
+  <main class="flex-grow pb-12">
+    <section class="hero container animate-fade-in" style="padding-top: 80px; padding-bottom: 40px;">
+      <span class="badge">Local Video Clean-up</span>
+      <h1 class="hero-title" style="font-size: clamp(28px, 4vw, 48px); margin-bottom: 16px;">Erase Video Watermarks</h1>
+      <p class="hero-subtitle" style="font-size: 16px; max-width: 600px; margin-bottom: 24px;">
+        WebCodecs + Mediabunny acceleration. Videos are decoded, processed, and encoded entirely inside your local browser sandbox.
+      </p>
+    </section>
+
+    <section class="container">
+      <div class="tool-split" style="grid-template-columns: 1fr 340px; gap: 32px;">
+        <!-- Left Panel: Compare Screen -->
+        <div style="display: flex; flex-direction: column; gap: 20px;">
+          <div class="glass-card" style="padding: 0; overflow: hidden;">
+            <div class="bg-black/40 px-6 py-4 border-b border-white/10 flex justify-between items-center" style="display: flex; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,0.1); padding: 16px 24px;">
+              <span style="font-size: 14px; font-weight: 700; color: var(--text-primary);">Before / After Comparison</span>
+              <span id="progressText" style="font-size: 13px; font-weight: 700; color: var(--primary);">Waiting for Video</span>
+            </div>
+
+            <div id="comparePlayer" class="compare-player">
+              <div class="compare-pane" style="position: relative; background: #000; display: flex; align-items: center; justify-content: center;">
+                <video id="originalVideo" playsinline preload="metadata" style="max-height: 380px; width: 100%; object-fit: contain;"></video>
+                <span class="badge" style="position: absolute; top: 12px; left: 12px; margin: 0; z-index: 10;">Before</span>
+                <div id="originalEmpty" class="empty" style="color: var(--text-muted); font-size: 14px;">Choose or drag video here</div>
+              </div>
+              <div class="compare-pane" style="position: relative; background: #000; border-left: 1px solid var(--border-glass); display: flex; align-items: center; justify-content: center;">
+                <video id="processedVideo" playsinline preload="metadata" muted style="max-height: 380px; width: 100%; object-fit: contain;"></video>
+                <span id="afterBadge" class="badge" hidden style="position: absolute; top: 12px; left: 12px; margin: 0; z-index: 10;">After</span>
+                <div id="processedEmpty" class="empty" style="color: var(--text-muted); font-size: 14px;">Export to view processed comparison</div>
+              </div>
+            </div>
+
+            <div class="compare-controls">
+              <button id="playPauseBtn" class="play-toggle" type="button" data-playing="false" aria-label="Play" disabled></button>
+              <input id="scrubber" type="range" min="0" max="1000" value="0" aria-label="Playback Progress" disabled>
+              <span id="timeLabel" class="time-label">0:00</span>
+            </div>
+          </div>
+          <!-- Video Metadata & Detection Info Grid -->
+          <div class="info-grid animate-fade-in delay-1">
+            <!-- Video Metadata panel -->
+            <div class="glass-card" style="padding: 24px;">
+              <h4 class="card-title" style="font-size: 15px; margin-bottom: 12px;">Video Info</h4>
+              <div id="metadata"></div>
+            </div>
+
+            <!-- Detection Info panel -->
+            <div class="glass-card" style="padding: 24px;">
+              <h4 class="card-title" style="font-size: 15px; margin-bottom: 12px;">Detection Info</h4>
+              <div id="detection"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right Panel: Controls & settings -->
+        <div style="display: flex; flex-direction: column; gap: 24px;">
+          <!-- Dropzone -->
+          <div id="dropzone" class="glass-card" style="padding: 24px; text-align: center; cursor: pointer; border: 2px dashed rgba(16,185,129,0.2);">
+            <div class="card-icon" style="margin: 0 auto 16px; width: 44px; height: 44px; border-radius: 12px;">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width: 20px; height: 20px;"><path d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+            </div>
+            <strong style="display: block; font-size: 15px; color: #fff;">Select Video File</strong>
+            <span class="footer-text" style="font-size: 11px; margin-top: 8px; display: block;">Videos are processed locally. A 10-second 1080p MP4 sample is best.</span>
+            <input id="fileInput" type="file" accept="image/jpeg,image/png,image/webp,video/mp4,video/webm,video/quicktime,video/*" hidden style="display: none;">
+          </div>
+
+          <!-- Auto Process Controls -->
+          <div class="glass-card" style="padding: 24px;">
+            <h4 class="card-title" style="font-size: 15px; margin-bottom: 16px; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 12px;">Auto Process Options</h4>
+            <div style="display: flex; flex-direction: column; gap: 16px;">
+              <div id="autoPresetSummary" class="footer-text" style="font-size: 12px; padding: 12px; background: rgba(0,0,0,0.3); border-radius: 8px; border: 1px solid rgba(255,255,255,0.05);">
+                <strong>AI Auto Process</strong>
+                <span style="display: block; margin-top: 4px;">Select a video to automatically map coordinates and apply local AI removal.</span>
+              </div>
+
+              <div class="progress" style="background: rgba(255,255,255,0.05); height: 6px; border-radius: 99px; overflow: hidden; border: 1px solid rgba(255,255,255,0.05);">
+                <span id="progressBar" style="display: block; height: 100%; width: 0; background: var(--primary); transition: width 0.2s;"></span>
+              </div>
+
+              <div id="status" class="footer-text" style="font-size: 12px; padding: 12px; background: rgba(0,0,0,0.3); border-radius: 8px; border: 1px solid rgba(255,255,255,0.05); min-height: 38px;"></div>
+
+              <div style="display: flex; flex-direction: column; gap: 10px;">
+                <button id="detectBtn" class="btn btn-secondary w-full" type="button" style="padding: 10px;">Detect Watermark</button>
+                <button id="resetBtn" class="btn btn-secondary w-full" type="button" style="padding: 10px; color: var(--text-muted);">Reset</button>
+                <button id="processBtn" class="btn btn-primary w-full" type="button" style="padding: 12px;">Auto Export Video</button>
+                <a id="downloadBtn" class="btn btn-secondary w-full" style="padding: 12px; text-align: center; text-decoration: none;" aria-disabled="true">Download Result</a>
+              </div>
+
+              <!-- Internal controls collapsed -->
+              <div class="internal-controls" hidden>
+                <span id="alphaGainValue">1.00</span>
+                <input id="alphaGain" type="range" min="0.25" max="1.35" step="0.05">
+                <input id="adaptiveAlpha" type="checkbox">
+                <input id="highQualityCleanup" type="checkbox">
+                <select id="denoiseBackend">
+                  <option value="none">Off</option>
+                  <option value="canvas-edge-denoise">Canvas Edge Denoise</option>
+                  <option value="canvas-edge-band-denoise">Canvas Edge Band Denoise</option>
+                  <option value="canvas-edge-core-denoise">Canvas Edge Core Denoise</option>
+                  <option value="canvas-footprint-polish">Canvas Footprint Polish</option>
+                  <option value="canvas-temporal-delta-stabilize">Canvas Temporal Delta Stabilize</option>
+                  <option value="canvas-temporal-match-delta-stabilize">Canvas Temporal Match Delta Stabilize</option>
+                  <option value="canvas-temporal-stabilize">Canvas Temporal Stabilize</option>
+                  <option value="canvas-texture-repair">Canvas Texture Repair</option>
+                  <option value="allenk-fdncnn-browser-spike">AI FDnCNN ONNX</option>
+                </select>
+                <button id="relocatedReviewPresetBtn" type="button">Relocated Preset</button>
+                <span id="edgeDenoiseStrengthValue">0.25</span>
+                <input id="edgeDenoiseStrength" type="range" min="0" max="1" step="0.05">
+                <span id="residualCleanupValue">1.50</span>
+                <input id="residualCleanup" type="range" min="0" max="1.80" step="0.05">
+                <input id="sampleCount" type="number" min="4" max="24" step="1">
+                <input id="videoBitrateMbps" type="number" min="1" max="80" step="0.5">
+                <input id="allowLowConfidence" type="checkbox">
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Sign In Modal -->
+  <div id="signInModal" class="auth-modal">
+    <div class="auth-card">
+      <button onclick="closeAuthModals()" class="modal-close">✕</button>
+      <h3 class="tool-teaser-title" style="margin-bottom: 24px; text-align: center;">Sign In to Erasify</h3>
+      <form class="space-y-4">
+        <div class="form-group">
+          <label class="form-label">Email Address</label>
+          <input type="email" required placeholder="name@example.com" class="form-control">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Password</label>
+          <input type="password" required placeholder="••••••••" class="form-control">
+        </div>
+        <button type="submit" class="btn btn-primary w-full" style="margin-top: 12px;">Sign In</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Sign Up Modal -->
+  <div id="signUpModal" class="auth-modal">
+    <div class="auth-card">
+      <button onclick="closeAuthModals()" class="modal-close">✕</button>
+      <h3 class="tool-teaser-title" style="margin-bottom: 24px; text-align: center;">Create Account</h3>
+      <form class="space-y-4">
+        <div class="form-group">
+          <label class="form-label">Full Name</label>
+          <input type="text" required placeholder="Your Name" class="form-control">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Email Address</label>
+          <input type="email" required placeholder="name@example.com" class="form-control">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Password</label>
+          <input type="password" required placeholder="Create Password" class="form-control">
+        </div>
+        <button type="submit" class="btn btn-primary w-full" style="margin-top: 12px;">Register</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="app-footer">
+    <div class="container footer-grid">
+      <div>
+        <a href="./index.html" class="logo-wrapper" style="margin-bottom: 16px;">
+          <img src="logo.png" alt="Erasify Logo" class="logo-img" style="height: 36px; width: 36px;">
+          <span class="logo-text" style="font-size: 22px;">Erasify</span>
+        </a>
+        <p class="footer-text">Clean and premium digital media assets. Local de-watermarking Sandbox operations ensure absolute safety for files.</p>
+      </div>
+      <div>
+        <h4 class="footer-title">Bespoke Softwares</h4>
+        <p class="footer-text">Need high-quality digital solutions or platforms? Contact Avdar Innovations pvt today to build bespoke systems.</p>
+      </div>
+      <div>
+        <h4 class="footer-title">Direct Contact</h4>
+        <p class="footer-text">Call / WhatsApp us:</p>
+        <p class="contact-phone">9967853364</p>
+      </div>
+    </div>
+    <div class="container footer-bottom">
+      &copy; 2026 Erasify. Powered by Avdar Innovations pvt limited. Get any kind of website and software contact us today.
+    </div>
+  </footer>
+
+  <script src="erasify.js"></script>
+  <script src="video-app.js"></script>
+</body>
+</html>

@@ -55,8 +55,8 @@ export function shouldUseRelocatedReviewPreset(detection, metadata = null) {
 export function getRelocatedReviewPresetConfig() {
     return {
         id: 'relocated-review',
-        label: 'AI 自动处理',
-        description: '自动检测水印位置并使用 AI 模型清理，无需手动调参。',
+        label: 'AI Auto Process',
+        description: 'Automatically detect watermark position and clean using AI model, no manual tuning required.',
         alphaGain: DEFAULT_AUTO_ALPHA_GAIN,
         adaptiveAlpha: false,
         highQualityCleanup: DEFAULT_HIGH_QUALITY_CLEANUP,
@@ -72,8 +72,8 @@ export function getRelocatedReviewPresetConfig() {
 export function getStandardAutoPresetConfig() {
     return {
         id: 'standard-auto',
-        label: 'AI 自动处理',
-        description: '默认使用本地 AI 模型处理右下角 Gemini/Veo 水印。',
+        label: 'AI Auto Process',
+        description: 'Default to local AI model for processing bottom-right Gemini/Veo watermarks.',
         alphaGain: DEFAULT_AUTO_ALPHA_GAIN,
         adaptiveAlpha: false,
         highQualityCleanup: DEFAULT_HIGH_QUALITY_CLEANUP,

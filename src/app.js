@@ -22,26 +22,26 @@ import {
 } from './shared/debugFileHandoff.js';
 
 const TEXT = {
-    loading: '正在加载资源...',
-    size: '尺寸',
-    watermark: '检测到的水印',
-    position: '位置',
-    status: '状态',
-    removed: '水印已移除',
-    skipped: '未检测到可移除水印，已保留原图',
-    unsupported: '浏览器不支持复制图片',
-    copied: '已复制！',
-    copy: '复制结果',
-    copyFailed: '复制失败',
-    unsupportedFile: '请选择 JPG、PNG、WebP 图片，或 MP4/WebM/MOV 视频。',
-    fileTooLarge: '图片调试入口暂不处理超过 20MB 的图片。视频会进入视频调试页。',
-    skippedLargeImages: '已跳过超过 20MB 的图片。',
-    handoffVideo: '正在进入视频调试流程...',
-    progress: '处理进度',
-    pending: '等待处理',
-    loadingImage: '读取图片...',
-    processing: '正在处理...',
-    processFailed: '处理失败'
+    loading: 'Loading resources...',
+    size: 'Size',
+    watermark: 'Detected Watermark',
+    position: 'Position',
+    status: 'Status',
+    removed: 'Watermark removed',
+    skipped: 'No removable watermark detected, original image kept',
+    unsupported: 'Browser does not support copying images',
+    copied: 'Copied!',
+    copy: 'Copy Result',
+    copyFailed: 'Copy failed',
+    unsupportedFile: 'Please select JPG, PNG, WebP images, or MP4/WebM/MOV videos.',
+    fileTooLarge: 'The image debug page does not process images over 20MB. Videos will enter the video debug page.',
+    skippedLargeImages: 'Skipped images exceeding 20MB.',
+    handoffVideo: 'Entering video debugging flow...',
+    progress: 'Progress',
+    pending: 'Pending',
+    loadingImage: 'Reading image...',
+    processing: 'Processing...',
+    processFailed: 'Processing failed'
 };
 
 let enginePromise = null;

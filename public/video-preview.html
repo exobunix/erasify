@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="robots" content="noindex, nofollow">
-  <title>Gemini 视频水印本地处理 MVP</title>
+  <title>Gemini Video Watermark Local Processing MVP</title>
   <style>
     :root {
       color-scheme: light;
@@ -471,57 +471,57 @@
   <div class="shell">
     <header>
       <div>
-        <h1>Gemini 视频水印本地处理 MVP</h1>
-        <p>WebCodecs + Mediabunny，文件只在浏览器内解码、逐帧处理、重新封装 MP4。</p>
+        <h1>Gemini Video Watermark Local Processing MVP</h1>
+        <p>WebCodecs + Mediabunny, files are decoded, processed frame-by-frame, and re-muxed to MP4 entirely in-browser.</p>
       </div>
-      <p>当前范围：右下角 72px Gemini/Veo 风格水印；视频轨重编码，兼容音频轨自动透传。</p>
+      <p>Current Scope: Bottom-right 72px Gemini/Veo style watermark; video track re-encoding, compatible with automatic audio track passthrough.</p>
     </header>
 
     <main class="layout">
-      <section class="workspace" aria-label="视频对比">
+      <section class="workspace" aria-label="Video Comparison">
         <div class="panel">
-          <div class="panel-head"><span>Before / After 对比</span><span id="progressText">等待视频</span></div>
+          <div class="panel-head"><span>Before / After Comparison</span><span id="progressText">Waiting for Video</span></div>
           <div id="comparePlayer" class="compare-player">
             <div class="compare-pane">
               <video id="originalVideo" playsinline preload="metadata"></video>
               <span class="badge">Before</span>
-              <div id="originalEmpty" class="empty">选择或拖入图片 / 视频</div>
+              <div id="originalEmpty" class="empty">Choose or drag image / video here</div>
             </div>
             <div class="compare-pane">
               <video id="processedVideo" playsinline preload="metadata" muted></video>
               <span id="afterBadge" class="badge" hidden>After</span>
-              <div id="processedEmpty" class="empty">导出完成后显示右侧对比</div>
+              <div id="processedEmpty" class="empty">Right side comparison appears after export</div>
             </div>
           </div>
           <div class="compare-controls">
-            <button id="playPauseBtn" class="play-toggle" type="button" data-playing="false" aria-label="播放" disabled></button>
-            <input id="scrubber" type="range" min="0" max="1000" value="0" aria-label="播放进度" disabled>
+            <button id="playPauseBtn" class="play-toggle" type="button" data-playing="false" aria-label="Play" disabled></button>
+            <input id="scrubber" type="range" min="0" max="1000" value="0" aria-label="Playback Progress" disabled>
             <span id="timeLabel" class="time-label">0:00</span>
           </div>
         </div>
       </section>
 
-      <aside class="side" aria-label="处理设置">
+      <aside class="side" aria-label="Settings">
         <div id="dropzone" class="dropzone" data-dragging="false" role="button" tabindex="0">
-          <strong>选择文件</strong>
-          <span class="muted">视频会在本页处理，图片会回到单图对比页。10 秒 1080p MP4 样例最适合当前 MVP。</span>
+          <strong>Select File</strong>
+          <span class="muted">Videos will be processed on this page; images will go back to the single-image comparison page. A 10-second 1080p MP4 sample is ideal for this MVP.</span>
           <input id="fileInput" type="file" accept="image/jpeg,image/png,image/webp,video/mp4,video/webm,video/quicktime,video/*" hidden>
         </div>
 
         <div class="panel">
-          <div class="panel-head">自动处理</div>
+          <div class="panel-head">Auto Process</div>
           <div class="controls">
             <div id="autoPresetSummary" class="auto-summary">
-              <strong>AI 自动处理</strong>
-              <span>选择视频后自动检测水印，导出时使用本地 AI 模型清理。</span>
+              <strong>AI Auto Process</strong>
+              <span>Automatically detects watermark after selecting a video, using a local AI model to clean it up during export.</span>
             </div>
-            <div class="progress" aria-label="处理进度"><span id="progressBar"></span></div>
+            <div class="progress" aria-label="Processing Progress"><span id="progressBar"></span></div>
             <div id="status" class="status" data-tone="info"></div>
             <div class="actions">
-              <button id="detectBtn" type="button">检测水印</button>
-              <button id="resetBtn" type="button">重置</button>
-              <button id="processBtn" class="primary" type="button">自动导出无水印视频</button>
-              <a id="downloadBtn" class="download-link" aria-disabled="true">下载结果</a>
+              <button id="detectBtn" type="button">Detect Watermark</button>
+              <button id="resetBtn" type="button">Reset</button>
+              <button id="processBtn" class="primary" type="button">Auto Export Watermark-Free Video</button>
+              <a id="downloadBtn" class="download-link" aria-disabled="true">Download Result</a>
             </div>
             <div class="internal-controls" hidden>
               <span id="alphaGainValue">1.00</span>
@@ -529,18 +529,18 @@
               <input id="adaptiveAlpha" type="checkbox">
               <input id="highQualityCleanup" type="checkbox">
               <select id="denoiseBackend">
-                <option value="none">关闭</option>
-                <option value="canvas-edge-denoise">Canvas 边缘去噪</option>
-                <option value="canvas-edge-band-denoise">Canvas 边缘带去噪</option>
-                <option value="canvas-edge-core-denoise">Canvas 边缘核心去噪</option>
-                <option value="canvas-footprint-polish">Canvas 足迹抛光</option>
-                <option value="canvas-temporal-delta-stabilize">Canvas 时序 Delta 稳定</option>
-                <option value="canvas-temporal-match-delta-stabilize">Canvas 匹配 Delta 稳定</option>
-                <option value="canvas-temporal-stabilize">Canvas 时序稳定</option>
-                <option value="canvas-texture-repair">Canvas 纹理回填</option>
+                <option value="none">Off</option>
+                <option value="canvas-edge-denoise">Canvas Edge Denoise</option>
+                <option value="canvas-edge-band-denoise">Canvas Edge Band Denoise</option>
+                <option value="canvas-edge-core-denoise">Canvas Edge Core Denoise</option>
+                <option value="canvas-footprint-polish">Canvas Footprint Polish</option>
+                <option value="canvas-temporal-delta-stabilize">Canvas Temporal Delta Stabilize</option>
+                <option value="canvas-temporal-match-delta-stabilize">Canvas Temporal Match Delta Stabilize</option>
+                <option value="canvas-temporal-stabilize">Canvas Temporal Stabilize</option>
+                <option value="canvas-texture-repair">Canvas Texture Repair</option>
                 <option value="allenk-fdncnn-browser-spike">AI FDnCNN ONNX</option>
               </select>
-              <button id="relocatedReviewPresetBtn" type="button">迁移锚点复核预设</button>
+              <button id="relocatedReviewPresetBtn" type="button">Relocated Anchor Review Preset</button>
               <span id="edgeDenoiseStrengthValue">0.25</span>
               <input id="edgeDenoiseStrength" type="range" min="0" max="1" step="0.05">
               <span id="residualCleanupValue">1.50</span>
@@ -550,16 +550,16 @@
               <input id="allowLowConfidence" type="checkbox">
             </div>
           </div>
-          <div class="note">导出会重新编码视频轨，并在 MP4 支持原音频编码时透传音频轨。</div>
+          <div class="note">Export re-encodes the video track and passes through the audio track if MP4 supports the original audio encoding.</div>
         </div>
 
         <div class="panel">
-          <div class="panel-head">视频信息</div>
+          <div class="panel-head">Video Info</div>
           <div id="metadata"></div>
         </div>
 
         <div class="panel">
-          <div class="panel-head">检测结果</div>
+          <div class="panel-head">Detection Info</div>
           <div id="detection"></div>
         </div>
       </aside>
