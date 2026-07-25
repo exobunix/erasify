@@ -782,10 +782,22 @@ function applyRelocatedReviewPreset() {
 }
 
 function setupEvents() {
-    els.dropzone.addEventListener('click', () => els.fileInput.click());
+    els.dropzone.addEventListener('click', () => {
+        if (!window.currentUser) {
+            alert('Please sign in or register to process files!');
+            window.openSignIn();
+            return;
+        }
+        els.fileInput.click();
+    });
     els.dropzone.addEventListener('keydown', (event) => {
         if (event.key === 'Enter' || event.key === ' ') {
             event.preventDefault();
+            if (!window.currentUser) {
+                alert('Please sign in or register to process files!');
+                window.openSignIn();
+                return;
+            }
             els.fileInput.click();
         }
     });

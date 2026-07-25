@@ -146,7 +146,14 @@ async function init() {
 }
 
 function setupEventListeners() {
-    uploadArea.addEventListener('click', () => fileInput.click());
+    uploadArea.addEventListener('click', () => {
+        if (!window.currentUser) {
+            alert('Please sign in or register to process files!');
+            window.openSignIn();
+            return;
+        }
+        fileInput.click();
+    });
     fileInput.addEventListener('change', handleFileSelect);
 
     document.addEventListener('dragover', (e) => {
