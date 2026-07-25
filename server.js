@@ -27,20 +27,44 @@ app.use((req, res, next) => {
 // Database connection
 let db = null;
 const client = new MongoClient(MONGODB_URI);
+let connectPromise = null;
 
 async function connectDB() {
-    try {
-        await client.connect();
-        db = client.db('erasify');
-        console.log('Connected to MongoDB Atlas');
-        
-        // Ensure unique index on email
-        await db.collection('users').createIndex({ email: 1 }, { unique: true });
-    } catch (err) {
-        console.error('MongoDB connection failed:', err);
+    if (db) return db;
+    if (!connectPromise) {
+        connectPromise = (async () => {
+            await client.connect();
+            const database = client.db('erasify');
+            console.log('Connected to MongoDB Atlas');
+            try {
+                await database.collection('users').createIndex({ email: 1 }, { unique: true });
+            } catch (err) {
+                console.error('Index creation failed:', err);
+            }
+            db = database;
+            return db;
+        })();
     }
+    return connectPromise;
 }
-connectDB();
+
+// Start connection in background
+connectDB().catch(err => console.error('Initial DB connection failed:', err));
+
+// Middleware to ensure DB connection before handling API requests
+app.use(async (req, res, next) => {
+    if (req.path.startsWith('/api/')) {
+        try {
+            await connectDB();
+            if (!db) {
+                return res.status(500).json({ error: 'Database connection not established' });
+            }
+        } catch (err) {
+            return res.status(500).json({ error: `Database connection failed: ${err.message}` });
+        }
+    }
+    next();
+});
 
 // Helper to check user session
 async function getCurrentUser(req) {
@@ -209,3 +233,5 @@ app.use((req, res) => {
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
 });
+
+export default app;
