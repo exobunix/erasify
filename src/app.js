@@ -213,6 +213,12 @@ function handleFileSelect(e) {
 }
 
 async function handleFiles(files) {
+    const isAllowed = await window.checkAuthAndQuota('image');
+    if (!isAllowed) {
+        fileInput.value = '';
+        return;
+    }
+
     setStatusMessage('');
 
     const list = Array.from(files || []).filter(Boolean);
@@ -369,6 +375,7 @@ async function processSingle(item) {
         renderSingleImageMeta(item);
 
         const processed = await processImageWithBestPath(item.file, img);
+        await consumeQuotaCredit('image');
         item.processedMeta = processed.meta;
         item.processedBlob = processed.blob;
         item.processedUrl = URL.createObjectURL(processed.blob);
@@ -479,6 +486,7 @@ async function processQueue(batchId) {
                 const processed = await processImageWithBestPath(item.file, img);
                 if (batchId !== activeBatchId) return;
 
+                await consumeQuotaCredit('image');
                 item.processedMeta = processed.meta;
                 item.processedBlob = processed.blob;
                 item.processedUrl = URL.createObjectURL(processed.blob);
@@ -597,3 +605,25 @@ function setupSlider() {
 }
 
 init();
+
+async function consumeQuotaCredit(type) {
+    try {
+        const res = await fetch('/api/user/consume', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ type })
+        });
+        if (res.ok) {
+            if (window.currentUser) {
+                if (type === 'image') window.currentUser.imagesUsed++;
+                else window.currentUser.videosUsed++;
+            }
+        } else {
+            const data = await res.json();
+            throw new Error(data.error || 'Failed to update quota usage');
+        }
+    } catch (err) {
+        console.error('Quota update failed:', err);
+    }
+}
+

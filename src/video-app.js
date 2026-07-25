@@ -524,6 +524,9 @@ function getDebugAlphaOptions() {
 
 async function runDetection() {
     if (!state.file || state.running) return;
+    const isAllowed = await window.checkAuthAndQuota('video');
+    if (!isAllowed) return;
+
     const jobId = ++state.jobId;
     state.running = true;
     updateButtons();
@@ -562,6 +565,9 @@ async function runDetection() {
 
 async function runExport() {
     if (!state.file || state.running) return;
+    const isAllowed = await window.checkAuthAndQuota('video');
+    if (!isAllowed) return;
+
     const jobId = ++state.jobId;
     state.running = true;
     updateButtons();
@@ -647,6 +653,7 @@ async function runExport() {
 
         if (state.processedUrl) URL.revokeObjectURL(state.processedUrl);
         state.processedUrl = URL.createObjectURL(result.blob);
+        await consumeQuotaCredit('video');
         els.processedVideo.src = state.processedUrl;
         els.processedVideo.load();
         els.processedEmpty.hidden = true;
@@ -881,3 +888,25 @@ async function init() {
 }
 
 init();
+
+async function consumeQuotaCredit(type) {
+    try {
+        const res = await fetch('/api/user/consume', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ type })
+        });
+        if (res.ok) {
+            if (window.currentUser) {
+                if (type === 'image') window.currentUser.imagesUsed++;
+                else window.currentUser.videosUsed++;
+            }
+        } else {
+            const data = await res.json();
+            throw new Error(data.error || 'Failed to update quota usage');
+        }
+    } catch (err) {
+        console.error('Quota update failed:', err);
+    }
+}
+

@@ -1,68 +1,211 @@
-import http from 'node:http';
-import fs from 'node:fs';
+import express from 'express';
+import cookieParser from 'cookie-parser';
+import { MongoClient } from 'mongodb';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import dotenv from 'dotenv';
+
+dotenv.config();
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const PORT = process.env.PORT || 3000;
-const PUBLIC_DIR = path.join(__dirname, 'dist');
+const MONGODB_URI = process.env.MONGODB_URI || "mongodb://localhost:27017/erasify";
 
-const MIME_TYPES = {
-    '.html': 'text/html',
-    '.css': 'text/css',
-    '.js': 'application/javascript',
-    '.json': 'application/json',
-    '.png': 'image/png',
-    '.jpg': 'image/jpeg',
-    '.gif': 'image/gif',
-    '.svg': 'image/svg+xml',
-    '.ico': 'image/x-icon',
-    '.wasm': 'application/wasm'
-};
+const app = express();
+app.use(express.json());
+app.use(cookieParser());
 
-const server = http.createServer((req, res) => {
-    let filePath = path.join(PUBLIC_DIR, req.url === '/' ? 'index.html' : req.url);
-    
-    // Safety check: prevent directory traversal
-    if (!filePath.startsWith(PUBLIC_DIR)) {
-        res.statusCode = 403;
-        res.end('Forbidden');
-        return;
+// Add headers for SharedArrayBuffer / WASM multi-threading
+app.use((req, res, next) => {
+    res.setHeader('Cross-Origin-Opener-Policy', 'same-origin');
+    res.setHeader('Cross-Origin-Embedder-Policy', 'require-corp');
+    next();
+});
+
+// Database connection
+let db = null;
+const client = new MongoClient(MONGODB_URI);
+
+async function connectDB() {
+    try {
+        await client.connect();
+        db = client.db('erasify');
+        console.log('Connected to MongoDB Atlas');
+        
+        // Ensure unique index on email
+        await db.collection('users').createIndex({ email: 1 }, { unique: true });
+    } catch (err) {
+        console.error('MongoDB connection failed:', err);
+    }
+}
+connectDB();
+
+// Helper to check user session
+async function getCurrentUser(req) {
+    const email = req.cookies?.session_email;
+    if (!email || !db) return null;
+    return await db.collection('users').findOne({ email });
+}
+
+// API Endpoints
+app.post('/api/auth/register', async (req, res) => {
+    const { name, email, password } = req.body;
+    if (!name || !email || !password) {
+        return res.status(400).json({ error: 'All fields are required' });
     }
 
-    const ext = path.extname(filePath).toLowerCase();
-    let contentType = MIME_TYPES[ext] || 'application/octet-stream';
-
-    fs.readFile(filePath, (err, content) => {
-        if (err) {
-            if (err.code === 'ENOENT') {
-                // Fallback to index.html for SPA routing
-                fs.readFile(path.join(PUBLIC_DIR, 'index.html'), (errHtml, contentHtml) => {
-                    if (errHtml) {
-                        res.statusCode = 500;
-                        res.end('Internal Server Error');
-                    } else {
-                        res.writeHead(200, { 'Content-Type': 'text/html' });
-                        res.end(contentHtml, 'utf-8');
-                    }
-                });
-            } else {
-                res.statusCode = 500;
-                res.end(`Server Error: ${err.code}`);
-            }
-        } else {
-            res.writeHead(200, {
-                'Content-Type': contentType,
-                'Cross-Origin-Opener-Policy': 'same-origin',
-                'Cross-Origin-Embedder-Policy': 'require-corp'
-            });
-            res.end(content, 'utf-8');
+    try {
+        // Check if user exists
+        const existing = await db.collection('users').findOne({ email });
+        if (existing) {
+            return res.status(400).json({ error: 'Email already registered' });
         }
+
+        // Create new user (default Free tier: 1 image, 0 videos)
+        const newUser = {
+            name,
+            email,
+            password, // In a real production system, bcrypt would hash this. Kept simple for demo.
+            plan: 'free',
+            imagesLimit: 1,
+            videosLimit: 0,
+            imagesUsed: 0,
+            videosUsed: 0,
+            createdAt: new Date()
+        };
+
+        await db.collection('users').insertOne(newUser);
+        
+        // Set session cookie
+        res.cookie('session_email', email, { httpOnly: true, maxAge: 30 * 24 * 60 * 60 * 1000 });
+        res.json({ success: true, user: { name, email, plan: 'free' } });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+app.post('/api/auth/login', async (req, res) => {
+    const { email, password } = req.body;
+    if (!email || !password) {
+        return res.status(400).json({ error: 'Email and password required' });
+    }
+
+    try {
+        const user = await db.collection('users').findOne({ email, password });
+        if (!user) {
+            return res.status(401).json({ error: 'Invalid email or password' });
+        }
+
+        res.cookie('session_email', email, { httpOnly: true, maxAge: 30 * 24 * 60 * 60 * 1000 });
+        res.json({ success: true, user: { name: user.name, email: user.email, plan: user.plan } });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+app.post('/api/auth/logout', (req, res) => {
+    res.clearCookie('session_email');
+    res.json({ success: true });
+});
+
+app.get('/api/user/profile', async (req, res) => {
+    const user = await getCurrentUser(req);
+    if (!user) {
+        return res.status(401).json({ error: 'Not authenticated' });
+    }
+    res.json({
+        name: user.name,
+        email: user.email,
+        plan: user.plan,
+        imagesUsed: user.imagesUsed,
+        videosUsed: user.videosUsed,
+        imagesLimit: user.imagesLimit,
+        videosLimit: user.videosLimit
     });
 });
 
-server.listen(PORT, () => {
+app.post('/api/user/consume', async (req, res) => {
+    const user = await getCurrentUser(req);
+    if (!user) {
+        return res.status(401).json({ error: 'Not authenticated' });
+    }
+
+    const { type } = req.body;
+    if (type !== 'image' && type !== 'video') {
+        return res.status(400).json({ error: 'Invalid type' });
+    }
+
+    try {
+        if (type === 'image') {
+            if (user.imagesLimit !== -1 && user.imagesUsed >= user.imagesLimit) {
+                return res.status(403).json({ error: 'Quota consumed. Please upgrade your plan!' });
+            }
+            await db.collection('users').updateOne({ email: user.email }, { $inc: { imagesUsed: 1 } });
+            return res.json({ success: true, imagesUsed: user.imagesUsed + 1 });
+        } else {
+            if (user.videosLimit !== -1 && user.videosUsed >= user.videosLimit) {
+                return res.status(403).json({ error: 'Quota consumed. Please upgrade your plan!' });
+            }
+            await db.collection('users').updateOne({ email: user.email }, { $inc: { videosUsed: 1 } });
+            return res.json({ success: true, videosUsed: user.videosUsed + 1 });
+        }
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+app.post('/api/user/upgrade', async (req, res) => {
+    const user = await getCurrentUser(req);
+    if (!user) {
+        return res.status(401).json({ error: 'Not authenticated' });
+    }
+
+    const { plan } = req.body;
+    let imagesLimit = 0;
+    let videosLimit = 0;
+
+    if (plan === 'basic') {
+        imagesLimit = 999999; // Represents unlimited images
+        videosLimit = 0;      // 0 videos
+    } else if (plan === 'daily') {
+        imagesLimit = 15;     // 15 images/day
+        videosLimit = 3;      // 3 videos/day
+    } else if (plan === 'unlimited') {
+        imagesLimit = 999999; // Unlimited images
+        videosLimit = 100;    // 100 videos
+    } else {
+        return res.status(400).json({ error: 'Invalid plan selected' });
+    }
+
+    try {
+        await db.collection('users').updateOne(
+            { email: user.email },
+            { 
+                $set: { 
+                    plan, 
+                    imagesLimit, 
+                    videosLimit,
+                    imagesUsed: 0, 
+                    videosUsed: 0 
+                } 
+            }
+        );
+        res.json({ success: true, plan, imagesLimit, videosLimit });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// Serve built static files
+app.use(express.static(path.join(__dirname, 'dist')));
+
+// Fallback to index.html for SPA routing
+app.get('*', (req, res) => {
+    res.sendFile(path.join(__dirname, 'dist', 'index.html'));
+});
+
+app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
 });

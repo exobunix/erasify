@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Erasify - My Profile</title>
+  <meta name="description" content="Manage your Erasify subscription plan and monitor usage stats.">
+  <link rel="icon" href="logo.png" type="image/png">
+  <link rel="stylesheet" href="erasify.css">
+  <style>
+    .profile-card {
+      background: rgba(30, 41, 59, 0.7);
+      backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 20px;
+      padding: 40px;
+      margin-top: 24px;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+    }
+    .profile-details {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      margin-bottom: 32px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      padding-bottom: 24px;
+    }
+    .profile-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 16px;
+    }
+    .profile-label {
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+    .profile-value {
+      color: #fff;
+      font-weight: 600;
+    }
+    .quota-section {
+      margin-bottom: 40px;
+    }
+    .quota-card {
+      background: rgba(15, 23, 42, 0.5);
+      border-radius: 12px;
+      padding: 20px;
+      margin-top: 16px;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+    .progress-bar-container {
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 10px;
+      height: 12px;
+      width: 100%;
+      margin-top: 10px;
+      overflow: hidden;
+    }
+    .progress-bar-fill {
+      background: var(--primary-gradient);
+      height: 100%;
+      width: 0%;
+      border-radius: 10px;
+      transition: width 0.5s ease-in-out;
+    }
+    .quota-info {
+      display: flex;
+      justify-content: space-between;
+      font-size: 14px;
+      margin-top: 8px;
+    }
+    .upgrade-section-title {
+      font-family: var(--font-display);
+      font-size: 20px;
+      font-weight: 700;
+      margin-bottom: 20px;
+      color: #fff;
+    }
+  </style>
+</head>
+<body class="bg-dark min-h-screen flex flex-col">
+
+  <!-- Header -->
+  <header class="app-header">
+    <div class="container header-container">
+      <a href="./index.html" class="logo-wrapper">
+        <img src="logo.png" alt="Erasify Logo" class="logo-img">
+        <span class="logo-text">Erasify</span>
+      </a>
+
+      <nav class="header-nav">
+        <a href="./index.html" class="header-link">Home</a>
+        <a href="./image-remover.html" class="header-link">Remove Image Logo</a>
+        <a href="./video-remover.html" class="header-link">Remove Video Logo</a>
+        <a href="./pricing.html" class="header-link">Pricing</a>
+        <a href="./contact.html" class="header-link">Contact Us</a>
+      </nav>
+
+      <div class="header-actions">
+        <div class="nav-status">
+          <span class="pulse-dot"></span>
+          Online
+        </div>
+        <button onclick="openSignIn()" class="btn btn-text">Sign In</button>
+        <button onclick="openSignUp()" class="btn btn-primary">Register</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Profile Content -->
+  <main class="flex-grow pb-20">
+    <div class="container animate-fade-in" style="padding-top: 100px; max-width: 800px;">
+      <span class="badge">User Area</span>
+      <h1 class="hero-title" style="font-size: 36px; margin-bottom: 8px;">My Account Profile</h1>
+      <p class="hero-subtitle" style="font-size: 15px; margin-bottom: 24px;">Manage plan limits and monitor consumption.</p>
+
+      <div id="profileContainer" class="profile-card">
+        <div style="text-align: center; padding: 40px 0;">
+          <div style="border: 3px solid rgba(16,185,129,0.1); border-top: 3px solid var(--primary); border-radius: 50%; width: 36px; height: 36px; animation: spin 1s linear infinite; margin: 0 auto 12px;"></div>
+          <p class="muted">Loading profile details...</p>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="app-footer">
+    <div class="container footer-grid">
+      <div>
+        <a href="./index.html" class="logo-wrapper" style="margin-bottom: 16px;">
+          <img src="logo.png" alt="Erasify Logo" class="logo-img" style="height: 36px; width: 36px;">
+          <span class="logo-text" style="font-size: 22px;">Erasify</span>
+        </a>
+        <p class="footer-text">Clean and premium digital media assets. Local de-watermarking Sandbox operations ensure absolute safety for files.</p>
+      </div>
+      <div>
+        <h4 class="footer-title">Bespoke Softwares</h4>
+        <p class="footer-text">Need high-quality digital solutions or platforms? Contact Avdar Innovations pvt today to build bespoke systems.</p>
+      </div>
+      <div>
+        <h4 class="footer-title">Direct Contact</h4>
+        <p class="footer-text">Call / WhatsApp us:</p>
+        <p class="contact-phone">9967853364</p>
+      </div>
+    </div>
+    <div class="container footer-bottom">
+      &copy; 2026 Erasify. Powered by Avdar Innovations pvt limited. Get any kind of website and software contact us today.
+    </div>
+  </footer>
+
+  <!-- Auth Modals -->
+  <div id="signInModal" class="auth-modal">
+    <div class="auth-card">
+      <button onclick="closeAuthModals()" class="modal-close">✕</button>
+      <h3 class="tool-teaser-title" style="margin-bottom: 24px; text-align: center;">Sign In to Erasify</h3>
+      <form class="space-y-4">
+        <div class="form-group">
+          <label class="form-label">Email Address</label>
+          <input type="email" required placeholder="name@example.com" class="form-control">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Password</label>
+          <input type="password" required placeholder="••••••••" class="form-control">
+        </div>
+        <button type="submit" class="btn btn-primary w-full" style="margin-top: 12px;">Sign In</button>
+      </form>
+    </div>
+  </div>
+
+  <div id="signUpModal" class="auth-modal">
+    <div class="auth-card">
+      <button onclick="closeAuthModals()" class="modal-close">✕</button>
+      <h3 class="tool-teaser-title" style="margin-bottom: 24px; text-align: center;">Create Account</h3>
+      <form class="space-y-4">
+        <div class="form-group">
+          <label class="form-label">Full Name</label>
+          <input type="text" required placeholder="Your Name" class="form-control">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Email Address</label>
+          <input type="email" required placeholder="name@example.com" class="form-control">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Password</label>
+          <input type="password" required placeholder="Create Password" class="form-control">
+        </div>
+        <button type="submit" class="btn btn-primary w-full" style="margin-top: 12px;">Register</button>
+      </form>
+    </div>
+  </div>
+
+  <script src="erasify.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', async () => {
+      await renderProfilePage();
+    });
+
+    async function renderProfilePage() {
+      const container = document.getElementById('profileContainer');
+      try {
+        const res = await fetch('/api/user/profile');
+        if (!res.ok) {
+          container.innerHTML = `
+            <div style="text-align: center; padding: 20px;">
+              <h3 style="color: #fff; margin-bottom: 16px;">Please Sign In</h3>
+              <p class="muted" style="margin-bottom: 24px;">You must be logged in to view your profile and quotas.</p>
+              <button onclick="openSignIn()" class="btn btn-primary">Sign In Now</button>
+            </div>
+          `;
+          return;
+        }
+
+        const user = await res.json();
+        
+        // Quota percentage calculations
+        const imgPercent = user.imagesLimit === -1 ? 100 : Math.min(100, (user.imagesUsed / user.imagesLimit) * 100);
+        const vidPercent = user.videosLimit === -1 ? 100 : Math.min(100, (user.videosUsed / user.videosLimit) * 100);
+
+        const imgLimitLabel = user.imagesLimit === 999999 ? 'Unlimited' : user.imagesLimit;
+        const vidLimitLabel = user.videosLimit;
+
+        container.innerHTML = `
+          <div class="profile-details">
+            <div class="profile-row">
+              <span class="profile-label">Name</span>
+              <span class="profile-value">${escapeHtml(user.name)}</span>
+            </div>
+            <div class="profile-row">
+              <span class="profile-label">Email</span>
+              <span class="profile-value">${escapeHtml(user.email)}</span>
+            </div>
+            <div class="profile-row">
+              <span class="profile-label">Current Plan</span>
+              <span class="profile-value" style="color: var(--primary); font-weight: bold; text-transform: uppercase;">
+                ${escapeHtml(user.plan)} Plan
+              </span>
+            </div>
+          </div>
+
+          <div class="quota-section">
+            <h3 class="upgrade-section-title" style="margin-bottom: 10px;">Quota Usage Dashboard</h3>
+            <p class="muted" style="font-size: 13px; margin-bottom: 20px;">If your quota runs out, simply choose one of the options below to renew or upgrade your plan.</p>
+
+            <div class="quota-card">
+              <div class="profile-row">
+                <span class="profile-label" style="color: #fff;">Image Watermarks</span>
+                <span class="profile-value">${user.imagesUsed} / ${imgLimitLabel} Used</span>
+              </div>
+              <div class="progress-bar-container">
+                <div class="progress-bar-fill" style="width: ${user.imagesLimit === 999999 ? '0%' : imgPercent}%"></div>
+              </div>
+            </div>
+
+            <div class="quota-card">
+              <div class="profile-row">
+                <span class="profile-label" style="color: #fff;">Video Watermarks</span>
+                <span class="profile-value">${user.videosUsed} / ${vidLimitLabel} Used</span>
+              </div>
+              <div class="progress-bar-container">
+                <div class="progress-bar-fill" style="width: ${user.videosLimit === 999999 ? '0%' : vidPercent}%"></div>
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <h3 class="upgrade-section-title">Upgrade or Renew Subscription</h3>
+            <div class="pricing-grid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-top: 16px;">
+              
+              <!-- Basic -->
+              <div class="pricing-card" style="padding: 24px; text-align: center;">
+                <div class="plan-name" style="font-size: 18px;">Basic Plan</div>
+                <div class="price" style="font-size: 28px; margin: 12px 0;">$9<span style="font-size: 12px; color: var(--text-muted);">/mo</span></div>
+                <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 16px;">Unlimited image removal. No video removals.</p>
+                <button onclick="simulateUpgrade('basic')" class="btn btn-secondary w-full" style="padding: 8px 16px; font-size: 13px;">
+                  ${user.plan === 'basic' ? 'Renew Plan' : 'Select Plan'}
+                </button>
+              </div>
+
+              <!-- Daily Pro -->
+              <div class="pricing-card popular" style="padding: 24px; text-align: center; border-color: var(--primary);">
+                <div class="plan-name" style="font-size: 18px;">Daily Pro</div>
+                <div class="price" style="font-size: 28px; margin: 12px 0;">$29<span style="font-size: 12px; color: var(--text-muted);">/mo</span></div>
+                <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 16px;">15 Images & 3 Videos daily quota limit.</p>
+                <button onclick="simulateUpgrade('daily')" class="btn btn-primary w-full" style="padding: 8px 16px; font-size: 13px;">
+                  ${user.plan === 'daily' ? 'Renew Plan' : 'Select Plan'}
+                </button>
+              </div>
+
+              <!-- Unlimited -->
+              <div class="pricing-card" style="padding: 24px; text-align: center;">
+                <div class="plan-name" style="font-size: 18px;">Unlimited</div>
+                <div class="price" style="font-size: 28px; margin: 12px 0;">$99<span style="font-size: 12px; color: var(--text-muted);">/mo</span></div>
+                <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 16px;">Unlimited image & 100 video removal.</p>
+                <button onclick="simulateUpgrade('unlimited')" class="btn btn-secondary w-full" style="padding: 8px 16px; font-size: 13px;">
+                  ${user.plan === 'unlimited' ? 'Renew Plan' : 'Select Plan'}
+                </button>
+              </div>
+
+            </div>
+          </div>
+        `;
+      } catch (err) {
+        console.error(err);
+        container.innerHTML = `<p class="text-red-500">Error loading profile data</p>`;
+      }
+    }
+
+    async function simulateUpgrade(plan) {
+      try {
+        const res = await fetch('/api/user/upgrade', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ plan })
+        });
+        if (res.ok) {
+          alert(`Successfully subscribed to ${plan.toUpperCase()} plan!`);
+          window.location.reload();
+        } else {
+          const data = await res.json();
+          alert(data.error || 'Upgrade failed');
+        }
+      } catch (err) {
+        console.error(err);
+        alert('Error simulating upgrade');
+      }
+    }
+  </script>
+</body>
+</html>
