@@ -568,6 +568,9 @@ async function runExport() {
     const isAllowed = await window.checkAuthAndQuota('video');
     if (!isAllowed) return;
 
+    const quotaOk = await consumeQuotaCredit('video');
+    if (!quotaOk) return;
+
     const jobId = ++state.jobId;
     state.running = true;
     updateButtons();
@@ -653,7 +656,6 @@ async function runExport() {
 
         if (state.processedUrl) URL.revokeObjectURL(state.processedUrl);
         state.processedUrl = URL.createObjectURL(result.blob);
-        await consumeQuotaCredit('video');
         els.processedVideo.src = state.processedUrl;
         els.processedVideo.load();
         els.processedEmpty.hidden = true;
@@ -913,12 +915,18 @@ async function consumeQuotaCredit(type) {
                 if (type === 'image') window.currentUser.imagesUsed++;
                 else window.currentUser.videosUsed++;
             }
+            return true;
         } else {
             const data = await res.json();
-            throw new Error(data.error || 'Failed to update quota usage');
+            alert(data.error || 'Failed to update quota usage');
+            if (data.error && data.error.includes('Quota consumed')) {
+                window.location.href = './profile.html';
+            }
+            return false;
         }
     } catch (err) {
         console.error('Quota update failed:', err);
+        return false;
     }
 }
 

@@ -381,8 +381,13 @@ async function processSingle(item) {
         originalImage.src = img.src;
         renderSingleImageMeta(item);
 
+        const quotaOk = await consumeQuotaCredit('image');
+        if (!quotaOk) {
+            setStatusMessage('Quota limit reached. Please buy a plan!', 'warn');
+            return;
+        }
+
         const processed = await processImageWithBestPath(item.file, img);
-        await consumeQuotaCredit('image');
         item.processedMeta = processed.meta;
         item.processedBlob = processed.blob;
         item.processedUrl = URL.createObjectURL(processed.blob);
@@ -490,10 +495,17 @@ async function processQueue(batchId) {
                 item.status = 'processing';
                 renderImageCardStatus(item);
 
+                const quotaOk = await consumeQuotaCredit('image');
+                if (!quotaOk) {
+                    item.status = 'failed';
+                    item.error = 'Quota limit reached';
+                    renderImageCardStatus(item);
+                    return;
+                }
+
                 const processed = await processImageWithBestPath(item.file, img);
                 if (batchId !== activeBatchId) return;
 
-                await consumeQuotaCredit('image');
                 item.processedMeta = processed.meta;
                 item.processedBlob = processed.blob;
                 item.processedUrl = URL.createObjectURL(processed.blob);
@@ -625,12 +637,18 @@ async function consumeQuotaCredit(type) {
                 if (type === 'image') window.currentUser.imagesUsed++;
                 else window.currentUser.videosUsed++;
             }
+            return true;
         } else {
             const data = await res.json();
-            throw new Error(data.error || 'Failed to update quota usage');
+            alert(data.error || 'Failed to update quota usage');
+            if (data.error && data.error.includes('Quota consumed')) {
+                window.location.href = './profile.html';
+            }
+            return false;
         }
     } catch (err) {
         console.error('Quota update failed:', err);
+        return false;
     }
 }
 
