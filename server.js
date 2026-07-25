@@ -15,7 +15,15 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const PORT = process.env.PORT || 3000;
-const MONGODB_URI = process.env.MONGODB_URI || "mongodb://localhost:27017/erasify";
+let MONGODB_URI = process.env.MONGODB_URI || "mongodb://localhost:27017/erasify";
+if (typeof MONGODB_URI === 'string') {
+    MONGODB_URI = MONGODB_URI.trim();
+    if (MONGODB_URI.startsWith('"') && MONGODB_URI.endsWith('"')) {
+        MONGODB_URI = MONGODB_URI.slice(1, -1);
+    } else if (MONGODB_URI.startsWith("'") && MONGODB_URI.endsWith("'")) {
+        MONGODB_URI = MONGODB_URI.slice(1, -1);
+    }
+}
 
 const app = express();
 app.use(express.json());
@@ -30,7 +38,10 @@ app.use((req, res, next) => {
 
 // Database connection
 let db = null;
-const client = new MongoClient(MONGODB_URI);
+const client = new MongoClient(MONGODB_URI, {
+    retryWrites: true,
+    writeConcern: { w: 'majority' }
+});
 let connectPromise = null;
 
 async function connectDB() {
