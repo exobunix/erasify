@@ -4,6 +4,10 @@ import { MongoClient } from 'mongodb';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import dotenv from 'dotenv';
+import dns from 'node:dns';
+
+// Force DNS resolution to prefer IPv4 (Atlas doesn't support IPv6 by default, causing SSL Alert 80 errors in serverless environments)
+dns.setDefaultResultOrder('ipv4first');
 
 dotenv.config();
 

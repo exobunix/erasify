@@ -206,5 +206,8 @@
     "express": "^5.2.1",
     "mediabunny": "^1.46.0",
     "mongodb": "^7.5.0"
+  },
+  "engines": {
+    "node": ">=20.0.0"
   }
 }
