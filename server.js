@@ -131,7 +131,7 @@ app.post('/api/auth/register', async (req, res) => {
         await db.collection('users').insertOne(newUser);
         
         // Set session cookie
-        res.cookie('session_email', email, { httpOnly: true, maxAge: 30 * 24 * 60 * 60 * 1000 });
+        res.cookie('session_email', email, { httpOnly: true, maxAge: 30 * 24 * 60 * 60 * 1000, path: '/' });
         res.json({ success: true, user: { name, email, plan: 'free' } });
     } catch (err) {
         res.status(500).json({ error: err.message });
@@ -150,7 +150,7 @@ app.post('/api/auth/login', async (req, res) => {
             return res.status(401).json({ error: 'Invalid email or password' });
         }
 
-        res.cookie('session_email', email, { httpOnly: true, maxAge: 30 * 24 * 60 * 60 * 1000 });
+        res.cookie('session_email', email, { httpOnly: true, maxAge: 30 * 24 * 60 * 60 * 1000, path: '/' });
         res.json({ success: true, user: { name: user.name, email: user.email, plan: user.plan } });
     } catch (err) {
         res.status(500).json({ error: err.message });
@@ -158,7 +158,7 @@ app.post('/api/auth/login', async (req, res) => {
 });
 
 app.post('/api/auth/logout', (req, res) => {
-    res.clearCookie('session_email');
+    res.clearCookie('session_email', { path: '/' });
     res.json({ success: true });
 });
 
