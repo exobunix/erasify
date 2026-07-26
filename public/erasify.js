@@ -79,7 +79,7 @@ function updateHeaderForLoggedInUser() {
   headerActions.innerHTML = `
     <div class="nav-status">
       <span class="pulse-dot"></span>
-      Logged In as ${escapeHtml(window.currentUser.name)} (${escapeHtml(window.currentUser.plan.toUpperCase())})
+      ${escapeHtml(window.currentUser.plan.toUpperCase())}
     </div>
     <a href="./profile.html" class="btn btn-text" style="text-decoration: none;">My Profile</a>
     <button onclick="handleSignOut()" class="btn btn-secondary">Sign Out</button>
