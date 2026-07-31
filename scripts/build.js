@@ -7,7 +7,7 @@ import { extname, join, normalize, resolve } from 'node:path';
 import { execSync } from 'child_process';
 
 const require = createRequire(import.meta.url);
-const pkg = require('./package.json');
+const pkg = require('../package.json');
 const isProd = process.env.NODE_ENV === 'production' || process.argv.includes('--prod');
 const EXTENSION_DIR = 'dist/extension';
 

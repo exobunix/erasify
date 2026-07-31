@@ -70,8 +70,8 @@
   },
   "scripts": {
     "start": "node server.js",
-    "dev": "node build.js",
-    "build": "node build.js --prod",
+    "dev": "node scripts/build.js",
+    "build": "node scripts/build.js --prod",
     "clean": "node scripts/clean.js",
     "clean:all": "node scripts/clean.js --include-profile",
     "convert:samples:webp": "node scripts/convert-samples-to-webp.js",
