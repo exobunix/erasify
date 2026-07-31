@@ -107,6 +107,7 @@ header.app-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  flex-wrap: nowrap;
 }
 
 .logo-wrapper {
@@ -129,6 +130,7 @@ header.app-header {
   font-size: 26px;
   color: var(--text-primary);
   letter-spacing: -0.5px;
+  transition: var(--transition);
 }
 
 /* Header Navigation Links */
@@ -140,6 +142,19 @@ header.app-header {
 @media (max-width: 900px) {
   .header-nav {
     display: none; /* Collapsed on mobile/small viewports */
+  }
+}
+
+@media (min-width: 901px) and (max-width: 1150px) {
+  .header-link {
+    padding: 6px 10px !important;
+    font-size: 13px !important;
+  }
+  .header-actions {
+    gap: 8px !important;
+  }
+  .logo-text {
+    font-size: 22px !important;
   }
 }
 
