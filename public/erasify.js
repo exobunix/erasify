@@ -23,6 +23,16 @@ document.addEventListener('DOMContentLoaded', () => {
     if (signUpModal) signUpModal.classList.remove('active');
   };
 
+  // Userscript install guide modal
+  window.openUserscriptModal = () => {
+    const m = document.getElementById('userscriptModal');
+    if (m) m.classList.add('active');
+  };
+  window.closeUserscriptModal = () => {
+    const m = document.getElementById('userscriptModal');
+    if (m) m.classList.remove('active');
+  };
+
   // Close modals on clicking outside the card
   [signInModal, signUpModal].forEach(modal => {
     if (modal) {

@@ -1,4 +1,19 @@
 {
+  "headers": [
+    {
+      "source": "/userscript/(.*)\\.user\\.js",
+      "headers": [
+        {
+          "key": "Content-Type",
+          "value": "application/javascript; charset=utf-8"
+        },
+        {
+          "key": "Content-Disposition",
+          "value": "inline"
+        }
+      ]
+    }
+  ],
   "rewrites": [
     {
       "source": "/api/:path*",
