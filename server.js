@@ -2,6 +2,7 @@ import express from 'express';
 import cookieParser from 'cookie-parser';
 import { MongoClient } from 'mongodb';
 import path from 'node:path';
+import { existsSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import dotenv from 'dotenv';
 import dns from 'node:dns';
@@ -72,10 +73,16 @@ app.use(async (req, res, next) => {
         try {
             await connectDB();
             if (!db) {
-                return res.status(500).json({ error: 'Database connection not established' });
+                if (req.path === '/api/user/profile') {
+                    return res.status(401).json({ error: 'Not authenticated (guest mode)' });
+                }
+                return res.status(503).json({ error: 'Database connection initializing. Please try again.' });
             }
         } catch (err) {
-            return res.status(500).json({ error: `Database connection failed: ${err.message}` });
+            if (req.path === '/api/user/profile') {
+                return res.status(401).json({ error: 'Not authenticated (guest mode)' });
+            }
+            return res.status(503).json({ error: `Database offline: ${err.message}` });
         }
     }
     next();
@@ -250,12 +257,24 @@ app.post('/api/user/upgrade', async (req, res) => {
     }
 });
 
-// Serve built static files
+// Convenience redirects for browser address bar typos/spaces
+app.get(['/video%20remover.html', '/video remover.html', '/video_remover.html', '/video'], (req, res) => {
+    res.redirect(301, '/video-remover.html');
+});
+app.get(['/image%20remover.html', '/image remover.html', '/image_remover.html', '/image'], (req, res) => {
+    res.redirect(301, '/image-remover.html');
+});
+
+// Serve static files (prefer fresh public assets, then dist bundles)
+app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.static(path.join(__dirname, 'dist')));
 
 // Fallback to index.html for SPA routing
 app.use((req, res) => {
-    res.sendFile(path.join(__dirname, 'dist', 'index.html'));
+    const indexPath = existsSync(path.join(__dirname, 'dist', 'index.html'))
+        ? path.join(__dirname, 'dist', 'index.html')
+        : path.join(__dirname, 'public', 'index.html');
+    res.sendFile(indexPath);
 });
 
 app.listen(PORT, () => {

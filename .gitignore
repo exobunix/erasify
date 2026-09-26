@@ -55,3 +55,7 @@ Thumbs.db
 .history/
 .idea/
 .vscode/
+
+# Android build cache
+android-build/
+*.idsig

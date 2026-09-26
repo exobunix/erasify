@@ -2,89 +2,81 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Erasify - Remove Watermark from Video</title>
-  <meta name="description" content="Instantly remove Gemini and Veo watermarks from videos.">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>Erasify - Remove Watermark from Video | App & Web</title>
+  <meta name="description" content="Instantly remove Gemini and Veo watermarks from videos with in-browser WebCodecs hardware acceleration.">
+  <meta name="theme-color" content="#040806">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Erasify">
+  <link rel="manifest" href="manifest.json">
   <link rel="icon" href="logo.png" type="image/png">
-  <link rel="stylesheet" href="video-preview.html">
-  <link rel="stylesheet" href="erasify.css">
+  <link rel="apple-touch-icon" href="logo.png">
+  <link rel="stylesheet" href="erasify.css?v=1.0.35">
   <style>
-    /* Custom video interface overrides */
-    .compare-player {
+    .compare-pane video {
+      max-height: 400px;
+      width: 100%;
+      object-fit: contain;
       background: #000;
-      border-radius: 16px;
-      overflow: hidden;
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      border: 1px solid var(--border-glass);
-      min-height: 380px;
+      border-radius: 8px;
     }
-    @media(max-width: 640px) {
-      .compare-player {
-        grid-template-columns: 1fr;
+    @media (max-width: 980px) {
+      .header-actions, .nav-status {
+        display: none !important;
       }
-    }
-    .compare-controls {
-      display: flex;
-      align-items: center;
-      gap: 16px;
-      background: rgba(0,0,0,0.4);
-      padding: 16px 24px;
-      border-top: 1px solid var(--border-glass);
-      border-radius: 0 0 16px 16px;
-    }
-    .play-toggle {
-      width: 32px;
-      height: 32px;
-      background: rgba(255,255,255,0.08);
-      border: 1px solid var(--border-glass);
-      border-radius: 50%;
-      cursor: pointer;
-      color: #fff;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: var(--transition);
-    }
-    .play-toggle:hover {
-      background: var(--primary);
-      color: var(--bg-darker);
-    }
-    .play-toggle::before {
-      content: '▶';
-      font-size: 12px;
-    }
-    .play-toggle[data-playing="true"]::before {
-      content: '❚❚';
-      font-size: 11px;
-    }
-    .time-label {
-      font-family: var(--font-sans);
-      font-size: 13px;
-      color: var(--text-muted);
-      min-width: 70px;
-    }
-    #scrubber {
-      flex-grow: 1;
-      accent-color: var(--primary);
-      cursor: pointer;
-    }
-    .info-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 24px;
-    }
-    @media(max-width: 768px) {
-      .info-grid {
-        grid-template-columns: 1fr;
-        gap: 16px;
+      .mobile-menu-btn {
+        display: flex !important;
+      }
+      .workbench-grid {
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 20px !important;
+      }
+      .mobile-order-first {
+        order: -1 !important;
+      }
+      .video-view-tabs {
+        display: flex !important;
+      }
+      .compare-player {
+        display: flex !important;
+        flex-direction: column !important;
+        min-height: auto !important;
+      }
+      .compare-player.view-before-only .compare-pane-after {
+        display: none !important;
+      }
+      .compare-player.view-after-only .compare-pane-before {
+        display: none !important;
+      }
+      .compare-pane {
+        width: 100% !important;
+        min-height: 200px !important;
+        padding: 10px !important;
+        border-left: none !important;
+        border-top: 1px solid var(--border-glass) !important;
+      }
+      .compare-pane:first-child {
+        border-top: none !important;
+      }
+      .compare-pane video {
+        max-height: 240px !important;
+        width: 100% !important;
+      }
+      .compare-pane .empty {
+        font-size: 13px !important;
+        padding: 20px 12px !important;
+        text-align: center !important;
+        white-space: normal !important;
       }
     }
   </style>
 </head>
 <body class="bg-dark min-h-screen flex flex-col">
 
-  <!-- Header with integrated Navigation links -->
+  <!-- Header with integrated Navigation links & Mobile Toggle -->
   <header class="app-header">
     <div class="container header-container">
       <a href="./index.html" class="logo-wrapper">
@@ -92,7 +84,7 @@
         <span class="logo-text">Erasify</span>
       </a>
 
-      <!-- Navigation links in Header -->
+      <!-- Desktop Navigation links -->
       <nav class="header-nav">
         <a href="./index.html" class="header-link">Home</a>
         <a href="./image-remover.html" class="header-link">Remove Image Logo</a>
@@ -109,99 +101,191 @@
         <button onclick="openSignIn()" class="btn btn-text">Sign In</button>
         <button onclick="openSignUp()" class="btn btn-primary">Register</button>
       </div>
+
+      <!-- Mobile Hamburger Button -->
+      <button class="mobile-menu-btn" aria-label="Toggle navigation menu">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
     </div>
   </header>
 
+  <!-- Mobile Navigation Drawer -->
+  <div class="mobile-backdrop"></div>
+  <aside class="mobile-drawer">
+    <div class="mobile-drawer-header">
+      <a href="./index.html" class="logo-wrapper" onclick="closeMobileMenu()">
+        <img src="logo.png" alt="Erasify Logo" class="logo-img" style="height: 36px; width: 36px;">
+        <span class="logo-text" style="font-size: 20px;">Erasify</span>
+      </a>
+      <button onclick="closeMobileMenu()" class="modal-close" style="position: static;">✕</button>
+    </div>
+
+    <nav class="mobile-nav-links">
+      <a href="./index.html" class="mobile-nav-link" onclick="closeMobileMenu()">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg>
+        Home
+      </a>
+      <a href="./image-remover.html" class="mobile-nav-link" onclick="closeMobileMenu()">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+        Remove Image Logo
+      </a>
+      <a href="./video-remover.html" class="mobile-nav-link active" onclick="closeMobileMenu()">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+        Remove Video Logo
+      </a>
+      <a href="./pricing.html" class="mobile-nav-link" onclick="closeMobileMenu()">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+        Pricing Plans
+      </a>
+      <a href="./contact.html" class="mobile-nav-link" onclick="closeMobileMenu()">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
+        Contact Us
+      </a>
+    </nav>
+
+    <div class="mobile-drawer-footer">
+      <button onclick="openSignIn()" class="btn btn-secondary w-full">Sign In</button>
+      <button onclick="openSignUp()" class="btn btn-primary w-full">Register Account</button>
+      <a href="https://wa.me/919967853364" target="_blank" class="btn btn-secondary w-full" style="font-size: 13px; color: var(--primary);">
+        WhatsApp: 9967853364
+      </a>
+    </div>
+  </aside>
+
+  <!-- Bottom Mobile App Bar (App Dock) -->
+  <nav class="bottom-app-bar" aria-label="Mobile Navigation">
+    <a href="./index.html" class="bottom-tab">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg>
+      <span>Home</span>
+    </a>
+    <a href="./image-remover.html" class="bottom-tab">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+      <span>Image</span>
+    </a>
+    <a href="./video-remover.html" class="bottom-tab active">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+      <span>Video</span>
+    </a>
+    <a href="./pricing.html" class="bottom-tab">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+      <span>Plans</span>
+    </a>
+    <a href="#" onclick="if(window.currentUser){window.location.href='./profile.html';}else{openSignIn();}return false;" class="bottom-tab bottom-tab-profile">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
+      <span>Account</span>
+    </a>
+  </nav>
+
   <!-- Video Remover Workspace -->
   <main class="flex-grow pb-12">
-    <section class="hero container animate-fade-in" style="padding-top: 80px; padding-bottom: 40px;">
+    <section class="hero container animate-fade-in" style="padding-top: 40px; padding-bottom: 24px;">
       <span class="badge">Local Video Clean-up</span>
-      <h1 class="hero-title" style="font-size: clamp(28px, 4vw, 48px); margin-bottom: 16px;">Erase Video Watermarks</h1>
-      <p class="hero-subtitle" style="font-size: 16px; max-width: 600px; margin-bottom: 24px;">
-        WebCodecs + Mediabunny acceleration. Videos are decoded, processed, and encoded entirely inside your local browser sandbox.
+      <h1 class="hero-title" style="font-size: clamp(24px, 4.2vw, 44px); margin-bottom: 12px;">Erase Video Watermarks</h1>
+      <p class="hero-subtitle" style="font-size: 14px; max-width: 620px; margin-bottom: 20px;">
+        WebCodecs + Mediabunny acceleration. Videos are decoded, de-blended, and encoded entirely inside your local browser sandbox.
       </p>
     </section>
 
     <section class="container">
-      <div class="tool-split" style="grid-template-columns: 1fr 340px; gap: 32px;">
-        <!-- Left Panel: Compare Screen -->
-        <div style="display: flex; flex-direction: column; gap: 20px;">
+      <!-- Responsive Workbench Grid -->
+      <div class="workbench-grid">
+        
+        <!-- Dropzone Section: Ordered First on Mobile -->
+        <div class="mobile-order-first" style="width: 100%;">
+          <div id="dropzone" class="glass-card" style="padding: 24px 18px; text-align: center; cursor: pointer; border: 2px dashed rgba(16,185,129,0.3); border-radius: 16px;">
+            <div class="card-icon" style="margin: 0 auto 12px; width: 44px; height: 44px; border-radius: 12px;">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+            </div>
+            <strong style="display: block; font-size: 15px; color: #fff;">Select or Drop Video File</strong>
+            <span class="footer-text" style="font-size: 12px; margin-top: 6px; display: block;">Supports MP4, WebM, QuickTime. 10s-30s clips process fastest.</span>
+            <input id="fileInput" type="file" accept="image/jpeg,image/png,image/webp,video/mp4,video/webm,video/quicktime,video/*" hidden style="display: none;">
+          </div>
+        </div>
+
+        <!-- Left/Main Panel: Compare Screen & Metadata -->
+        <div style="display: flex; flex-direction: column; gap: 20px; width: 100%;">
           <div class="glass-card" style="padding: 0; overflow: hidden;">
-            <div class="bg-black/40 px-6 py-4 border-b border-white/10 flex justify-between items-center" style="display: flex; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,0.1); padding: 16px 24px;">
-              <span style="font-size: 14px; font-weight: 700; color: var(--text-primary);">Before / After Comparison</span>
-              <span id="progressText" style="font-size: 13px; font-weight: 700; color: var(--primary);">Waiting for Video</span>
+            <div class="bg-black/40 px-4 py-3 border-b border-white/10 flex justify-between items-center" style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.1); padding: 12px 18px; flex-wrap: wrap; gap: 6px;">
+              <span style="font-size: 13px; font-weight: 700; color: var(--text-primary);">Before / After Comparison</span>
+              <span id="progressText" style="font-size: 12px; font-weight: 700; color: var(--primary);">Waiting for Video</span>
+            </div>
+
+            <!-- Mobile View Switcher Tabs -->
+            <div class="video-view-tabs" id="videoViewTabs">
+              <button type="button" class="btn btn-primary" id="viewBothBtn" onclick="setCompareView('both')" style="flex: 1; padding: 7px 8px; font-size: 11px; min-height: 36px;">All Panes</button>
+              <button type="button" class="btn btn-secondary" id="viewBeforeBtn" onclick="setCompareView('before')" style="flex: 1; padding: 7px 8px; font-size: 11px; min-height: 36px;">Before</button>
+              <button type="button" class="btn btn-secondary" id="viewAfterBtn" onclick="setCompareView('after')" style="flex: 1; padding: 7px 8px; font-size: 11px; min-height: 36px;">After</button>
             </div>
 
             <div id="comparePlayer" class="compare-player">
-              <div class="compare-pane" style="position: relative; background: #000; display: flex; align-items: center; justify-content: center;">
-                <video id="originalVideo" playsinline preload="metadata" style="max-height: 380px; width: 100%; object-fit: contain;"></video>
-                <span class="badge" style="position: absolute; top: 12px; left: 12px; margin: 0; z-index: 10;">Before</span>
-                <div id="originalEmpty" class="empty" style="color: var(--text-muted); font-size: 14px;">Choose or drag video here</div>
+              <div id="originalPane" class="compare-pane compare-pane-before" style="position: relative; background: #000; display: flex; align-items: center; justify-content: center; min-height: 200px;">
+                <video id="originalVideo" playsinline preload="metadata"></video>
+                <span class="badge" style="position: absolute; top: 10px; left: 10px; margin: 0; z-index: 10; font-size: 10px; padding: 3px 10px;">Before</span>
+                <div id="originalEmpty" class="empty">Choose or drag video file</div>
               </div>
-              <div class="compare-pane" style="position: relative; background: #000; border-left: 1px solid var(--border-glass); display: flex; align-items: center; justify-content: center;">
-                <video id="processedVideo" playsinline preload="metadata" muted style="max-height: 380px; width: 100%; object-fit: contain;"></video>
-                <span id="afterBadge" class="badge" hidden style="position: absolute; top: 12px; left: 12px; margin: 0; z-index: 10;">After</span>
-                <div id="processedEmpty" class="empty" style="color: var(--text-muted); font-size: 14px;">Export to view processed comparison</div>
+              <div id="processedPane" class="compare-pane compare-pane-after" style="position: relative; background: #000; display: flex; align-items: center; justify-content: center; min-height: 200px;">
+                <video id="processedVideo" playsinline preload="metadata" muted></video>
+                <span id="afterBadge" class="badge" hidden style="position: absolute; top: 10px; left: 10px; margin: 0; z-index: 10; font-size: 10px; padding: 3px 10px;">After</span>
+                <div id="processedEmpty" class="empty">Processed preview appears here</div>
               </div>
             </div>
 
+            <!-- Video playback controls bar -->
             <div class="compare-controls">
               <button id="playPauseBtn" class="play-toggle" type="button" data-playing="false" aria-label="Play" disabled></button>
               <input id="scrubber" type="range" min="0" max="1000" value="0" aria-label="Playback Progress" disabled>
               <span id="timeLabel" class="time-label">0:00</span>
             </div>
           </div>
+
           <!-- Video Metadata & Detection Info Grid -->
           <div class="info-grid animate-fade-in delay-1">
             <!-- Video Metadata panel -->
-            <div class="glass-card" style="padding: 24px;">
-              <h4 class="card-title" style="font-size: 15px; margin-bottom: 12px;">Video Info</h4>
-              <div id="metadata"></div>
+            <div class="glass-card" style="padding: 18px;">
+              <h4 class="card-title" style="font-size: 14px; margin-bottom: 10px; display: flex; align-items: center; gap: 8px;">
+                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                Video Info
+              </h4>
+              <div id="metadata" style="font-size: 12px; color: var(--text-muted); line-height: 1.5;">No video loaded</div>
             </div>
 
             <!-- Detection Info panel -->
-            <div class="glass-card" style="padding: 24px;">
-              <h4 class="card-title" style="font-size: 15px; margin-bottom: 12px;">Detection Info</h4>
-              <div id="detection"></div>
+            <div class="glass-card" style="padding: 18px;">
+              <h4 class="card-title" style="font-size: 14px; margin-bottom: 10px; display: flex; align-items: center; gap: 8px;">
+                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                Detection Info
+              </h4>
+              <div id="detection" style="font-size: 12px; color: var(--text-muted); line-height: 1.5;">Awaiting scan</div>
             </div>
           </div>
         </div>
 
-        <!-- Right Panel: Controls & settings -->
-        <div style="display: flex; flex-direction: column; gap: 24px;">
-          <!-- Dropzone -->
-          <div id="dropzone" class="glass-card" style="padding: 24px; text-align: center; cursor: pointer; border: 2px dashed rgba(16,185,129,0.2);">
-            <div class="card-icon" style="margin: 0 auto 16px; width: 44px; height: 44px; border-radius: 12px;">
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width: 20px; height: 20px;"><path d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg>
-            </div>
-            <strong style="display: block; font-size: 15px; color: #fff;">Select Video File</strong>
-            <span class="footer-text" style="font-size: 11px; margin-top: 8px; display: block;">Videos are processed locally. A 10-second 1080p MP4 sample is best.</span>
-            <input id="fileInput" type="file" accept="image/jpeg,image/png,image/webp,video/mp4,video/webm,video/quicktime,video/*" hidden style="display: none;">
-          </div>
-
-          <!-- Auto Process Controls -->
-          <div class="glass-card" style="padding: 24px;">
-            <h4 class="card-title" style="font-size: 15px; margin-bottom: 16px; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 12px;">Auto Process Options</h4>
-            <div style="display: flex; flex-direction: column; gap: 16px;">
-              <div id="autoPresetSummary" class="footer-text" style="font-size: 12px; padding: 12px; background: rgba(0,0,0,0.3); border-radius: 8px; border: 1px solid rgba(255,255,255,0.05);">
+        <!-- Action Controls & Settings -->
+        <div style="display: flex; flex-direction: column; gap: 20px; width: 100%;">
+          <div class="glass-card" style="padding: 20px;">
+            <h4 class="card-title" style="font-size: 15px; margin-bottom: 14px; border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: 10px;">Auto Process Options</h4>
+            <div style="display: flex; flex-direction: column; gap: 14px;">
+              <div id="autoPresetSummary" class="footer-text" style="font-size: 12px; padding: 12px; background: rgba(0,0,0,0.35); border-radius: 10px; border: 1px solid rgba(255,255,255,0.06); line-height: 1.5;">
                 <strong>AI Auto Process</strong>
-                <span style="display: block; margin-top: 4px;">Select a video to automatically map coordinates and apply local AI removal.</span>
+                <span style="display: block; margin-top: 3px;">Select a video to automatically map coordinates and apply local AI removal.</span>
               </div>
 
-              <div class="progress" style="background: rgba(255,255,255,0.05); height: 6px; border-radius: 99px; overflow: hidden; border: 1px solid rgba(255,255,255,0.05);">
+              <div class="progress" style="background: rgba(255,255,255,0.06); height: 8px; border-radius: 99px; overflow: hidden; border: 1px solid rgba(255,255,255,0.05);">
                 <span id="progressBar" style="display: block; height: 100%; width: 0; background: var(--primary); transition: width 0.2s;"></span>
               </div>
 
-              <div id="status" class="footer-text" style="font-size: 12px; padding: 12px; background: rgba(0,0,0,0.3); border-radius: 8px; border: 1px solid rgba(255,255,255,0.05); min-height: 38px;"></div>
+              <div id="status" class="footer-text" style="font-size: 12px; padding: 12px; background: rgba(0,0,0,0.35); border-radius: 10px; border: 1px solid rgba(255,255,255,0.06); min-height: 38px; line-height: 1.5;">Ready to scan</div>
 
               <div style="display: flex; flex-direction: column; gap: 10px;">
-                <button id="detectBtn" class="btn btn-secondary w-full" type="button" style="padding: 10px;">Detect Watermark</button>
-                <button id="resetBtn" class="btn btn-secondary w-full" type="button" style="padding: 10px; color: var(--text-muted);">Reset</button>
-                <button id="processBtn" class="btn btn-primary w-full" type="button" style="padding: 12px;">Auto Export Video</button>
-                <a id="downloadBtn" class="btn btn-secondary w-full" style="padding: 12px; text-align: center; text-decoration: none;" aria-disabled="true">Download Result</a>
+                <button id="detectBtn" class="btn btn-secondary w-full" type="button" style="padding: 12px;">Detect Watermark</button>
+                <button id="resetBtn" class="btn btn-secondary w-full" type="button" style="padding: 12px; color: var(--text-muted);">Reset</button>
+                <button id="processBtn" class="btn btn-primary w-full" type="button" style="padding: 13px;">Auto Export Video</button>
+                <a id="downloadBtn" class="btn btn-secondary w-full" style="padding: 13px; text-align: center; text-decoration: none;" aria-disabled="true">Download Result</a>
               </div>
 
-              <!-- Internal controls collapsed -->
+              <!-- Internal controls collapsed for video engine -->
               <div class="internal-controls" hidden>
                 <span id="alphaGainValue">1.00</span>
                 <input id="alphaGain" type="range" min="0.25" max="1.35" step="0.05">
@@ -230,8 +314,8 @@
               </div>
             </div>
           </div>
-
         </div>
+
       </div>
     </section>
   </main>
@@ -290,12 +374,12 @@
       </div>
       <div>
         <h4 class="footer-title">Bespoke Softwares</h4>
-        <p class="footer-text">Need high-quality digital solutions or platforms? Contact Avdar Innovations pvt today to build bespoke systems.</p>
+        <p class="footer-text">Need high-quality digital solutions or platforms? Contact Avdar Innovations pvt limited today to build bespoke systems.</p>
       </div>
       <div>
         <h4 class="footer-title">Direct Contact</h4>
         <p class="footer-text">Call / WhatsApp us:</p>
-        <p class="contact-phone">9967853364</p>
+        <p class="contact-phone"><a href="tel:9967853364" style="color: inherit; text-decoration: none;">9967853364</a></p>
       </div>
     </div>
     <div class="container footer-bottom">
@@ -303,7 +387,31 @@
     </div>
   </footer>
 
-  <script src="erasify.js?v=1.0.31"></script>
+  <script src="erasify.js?v=1.0.35"></script>
   <script src="video-app.js"></script>
+  <script>
+    function setCompareView(view) {
+      const player = document.getElementById('comparePlayer');
+      const bBtn = document.getElementById('viewBothBtn');
+      const befBtn = document.getElementById('viewBeforeBtn');
+      const aftBtn = document.getElementById('viewAfterBtn');
+      if (!player) return;
+
+      player.classList.remove('view-before-only', 'view-after-only');
+      if (bBtn) { bBtn.classList.remove('btn-primary'); bBtn.classList.add('btn-secondary'); }
+      if (befBtn) { befBtn.classList.remove('btn-primary'); befBtn.classList.add('btn-secondary'); }
+      if (aftBtn) { aftBtn.classList.remove('btn-primary'); aftBtn.classList.add('btn-secondary'); }
+
+      if (view === 'before') {
+        player.classList.add('view-before-only');
+        if (befBtn) { befBtn.classList.add('btn-primary'); befBtn.classList.remove('btn-secondary'); }
+      } else if (view === 'after') {
+        player.classList.add('view-after-only');
+        if (aftBtn) { aftBtn.classList.add('btn-primary'); aftBtn.classList.remove('btn-secondary'); }
+      } else {
+        if (bBtn) { bBtn.classList.add('btn-primary'); bBtn.classList.remove('btn-secondary'); }
+      }
+    }
+  </script>
 </body>
 </html>

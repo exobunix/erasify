@@ -1,0 +1,25 @@
+{
+  "name": "Erasify - AI Watermark & Logo Remover",
+  "short_name": "Erasify",
+  "description": "Instantly remove Gemini AI and Veo watermarks from images and videos using local sandboxed AI.",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#040806",
+  "theme_color": "#040806",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "logo.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["photo", "video", "utilities", "productivity"]
+}

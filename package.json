@@ -72,6 +72,7 @@
     "start": "node server.js",
     "dev": "node scripts/build.js",
     "build": "node scripts/build.js --prod",
+    "apk:build": "node scripts/build-apk.js",
     "clean": "node scripts/clean.js",
     "clean:all": "node scripts/clean.js --include-profile",
     "convert:samples:webp": "node scripts/convert-samples-to-webp.js",
@@ -188,6 +189,7 @@
   },
   "devDependencies": {
     "@types/node": "^24.6.0",
+    "archiver": "^8.0.0",
     "esbuild": "^0.24.0",
     "onnxruntime-web": "^1.26.0",
     "playwright": "^1.58.2",

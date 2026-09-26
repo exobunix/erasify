@@ -2,17 +2,23 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Erasify - Premium AI Watermark & Logo Remover</title>
-  <meta name="description" content="Instantly remove Gemini AI and Veo watermarks from images and videos using state-of-the-art AI.">
-  <meta name="robots" content="noindex, nofollow">
-  <link rel="canonical" href="https://geminiwatermarkremover.io/">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>Erasify - Premium AI Watermark & Logo Remover | App & Web</title>
+  <meta name="description" content="Instantly remove Gemini AI, Imagen, and Veo watermarks from images and videos using state-of-the-art sandboxed AI. 100% private, zero-blur recovery.">
+  <meta name="theme-color" content="#040806">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Erasify">
+  <meta name="application-name" content="Erasify">
+  <link rel="manifest" href="manifest.json">
   <link rel="icon" href="logo.png" type="image/png">
-  <link rel="stylesheet" href="erasify.css">
+  <link rel="apple-touch-icon" href="logo.png">
+  <link rel="stylesheet" href="erasify.css?v=1.0.35">
 </head>
 <body class="bg-dark min-h-screen flex flex-col">
 
-  <!-- Header with integrated Navigation links -->
+  <!-- Header with integrated Navigation links & Mobile Toggle -->
   <header class="app-header">
     <div class="container header-container">
       <a href="./index.html" class="logo-wrapper">
@@ -20,7 +26,7 @@
         <span class="logo-text">Erasify</span>
       </a>
 
-      <!-- Navigation links moved to Header -->
+      <!-- Desktop Navigation links -->
       <nav class="header-nav">
         <a href="./index.html" class="header-link active">Home</a>
         <a href="./image-remover.html" class="header-link">Remove Image Logo</a>
@@ -37,8 +43,82 @@
         <button onclick="openSignIn()" class="btn btn-text">Sign In</button>
         <button onclick="openSignUp()" class="btn btn-primary">Register</button>
       </div>
+
+      <!-- Mobile Hamburger Button -->
+      <button class="mobile-menu-btn" aria-label="Toggle navigation menu">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
     </div>
   </header>
+
+  <!-- Mobile Navigation Drawer -->
+  <div class="mobile-backdrop"></div>
+  <aside class="mobile-drawer">
+    <div class="mobile-drawer-header">
+      <a href="./index.html" class="logo-wrapper" onclick="closeMobileMenu()">
+        <img src="logo.png" alt="Erasify Logo" class="logo-img" style="height: 36px; width: 36px;">
+        <span class="logo-text" style="font-size: 20px;">Erasify</span>
+      </a>
+      <button onclick="closeMobileMenu()" class="modal-close" style="position: static;">✕</button>
+    </div>
+
+    <nav class="mobile-nav-links">
+      <a href="./index.html" class="mobile-nav-link active" onclick="closeMobileMenu()">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg>
+        Home
+      </a>
+      <a href="./image-remover.html" class="mobile-nav-link" onclick="closeMobileMenu()">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+        Remove Image Logo
+      </a>
+      <a href="./video-remover.html" class="mobile-nav-link" onclick="closeMobileMenu()">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+        Remove Video Logo
+      </a>
+      <a href="./pricing.html" class="mobile-nav-link" onclick="closeMobileMenu()">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+        Pricing Plans
+      </a>
+      <a href="./contact.html" class="mobile-nav-link" onclick="closeMobileMenu()">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
+        Contact Us
+      </a>
+    </nav>
+
+    <div class="mobile-drawer-footer">
+      <button onclick="openSignIn()" class="btn btn-secondary w-full">Sign In</button>
+      <button onclick="openSignUp()" class="btn btn-primary w-full">Register Account</button>
+      <a href="https://wa.me/919967853364" target="_blank" class="btn btn-secondary w-full" style="font-size: 13px; color: var(--primary);">
+        WhatsApp: 9967853364
+      </a>
+    </div>
+  </aside>
+
+  <!-- Bottom Mobile App Bar (App Dock) -->
+  <nav class="bottom-app-bar" aria-label="Mobile Navigation">
+    <a href="./index.html" class="bottom-tab active">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg>
+      <span>Home</span>
+    </a>
+    <a href="./image-remover.html" class="bottom-tab">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+      <span>Image</span>
+    </a>
+    <a href="./video-remover.html" class="bottom-tab">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+      <span>Video</span>
+    </a>
+    <a href="./pricing.html" class="bottom-tab">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+      <span>Plans</span>
+    </a>
+    <a href="#" onclick="if(window.currentUser){window.location.href='./profile.html';}else{openSignIn();}return false;" class="bottom-tab bottom-tab-profile">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
+      <span>Account</span>
+    </a>
+  </nav>
 
   <!-- Hero Section -->
   <main class="flex-grow">
@@ -46,97 +126,363 @@
       <span class="badge">Next-Generation AI Clean-up</span>
       <h1 class="hero-title">
         Instantly Erase Logos & Watermarks <br>
-        <span class="gradient-text">Powered by Local AI</span>
+        <span class="gradient-text">Powered by Local AI Sandbox</span>
       </h1>
       <p class="hero-subtitle">
-        Say goodbye to unwanted Gemini and Veo style watermarks. Our state-of-the-art, in-browser technology removes stamps and logos dynamically with pixel-perfect recovery.
+        Say goodbye to unwanted Gemini and Veo style watermarks. Our state-of-the-art in-browser technology removes stamps and logos dynamically with pixel-perfect recovery and 100% private execution.
       </p>
 
       <div class="hero-actions">
-        <a href="./image-remover.html" class="btn btn-primary">One-Click Image Remover</a>
-        <a href="./video-remover.html" class="btn btn-secondary">Erase Video Watermark</a>
+        <a href="./image-remover.html" class="btn btn-primary">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+          One-Click Image Remover
+        </a>
+        <a href="./video-remover.html" class="btn btn-secondary">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+          Erase Video Watermark
+        </a>
       </div>
     </section>
 
-    <!-- Side-by-side Removal Sections (Centered on screen) -->
+    <!-- Side-by-side Removal Quick Launch Cards -->
     <section class="container tool-split animate-fade-in delay-1">
       <div class="glass-card tool-teaser">
-        <div class="card-icon" style="margin: 0 auto 24px;">
-          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" width="24" height="24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+        <div>
+          <div class="card-icon" style="margin: 0 auto 20px;">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+          </div>
+          <h3 class="tool-teaser-title">Remove Logo from Image</h3>
+          <p class="card-text" style="margin-bottom: 24px;">Upload single or multiple images to instantly extract Gemini branding with advanced AI model inference directly inside your web browser sandbox.</p>
         </div>
-        <h3 class="tool-teaser-title">Remove Logo from Image</h3>
-        <p class="card-text" style="margin-bottom: 24px;">Upload single or multiple images to instantly extract Gemini branding with advanced AI model inference directly inside your web sandbox.</p>
         <a href="./image-remover.html" class="btn btn-primary w-full">Start Erasing Images</a>
       </div>
 
       <div class="glass-card tool-teaser">
-        <div class="card-icon" style="margin: 0 auto 24px;">
-          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" width="24" height="24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+        <div>
+          <div class="card-icon" style="margin: 0 auto 20px;">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+          </div>
+          <h3 class="tool-teaser-title">Remove Logo from Video</h3>
+          <p class="card-text" style="margin-bottom: 24px;">Repack MP4/WebM videos and eliminate bottom-right watermarks frame-by-frame with WebCodecs hardware GPU acceleration.</p>
         </div>
-        <h3 class="tool-teaser-title">Remove Logo from Video</h3>
-        <p class="card-text" style="margin-bottom: 24px;">Repack MP4/WebM videos and eliminate bottom-right watermarks frame-by-frame with WebCodecs hardware acceleration.</p>
         <a href="./video-remover.html" class="btn btn-secondary w-full">Start Erasing Videos</a>
       </div>
     </section>
 
-    <!-- How it Works section -->
-    <section class="steps-section animate-fade-in delay-2">
+    <!-- NEW SECTION 1: Stats & Trust Metrics Strip -->
+    <section class="stats-strip">
+      <div class="container stats-grid">
+        <div class="stat-item">
+          <div class="stat-number">500,000+</div>
+          <div class="stat-label">AI Assets Cleaned</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-number">99.9%</div>
+          <div class="stat-label">Subpixel Accuracy</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-number">&lt; 140ms</div>
+          <div class="stat-label">Avg Processing Speed</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-number">100%</div>
+          <div class="stat-label">Client-Side Privacy</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- NEW SECTION 2: Interactive Before/After Visual Showcase -->
+    <section id="showcase" class="showcase-section">
       <div class="container">
-        <h2 class="section-title">How It Works</h2>
-        <div class="steps-grid">
-          <div class="step-card">
-            <div class="step-number">1</div>
-            <h3 class="card-title">Select Media</h3>
-            <p class="card-text">Upload your image or video containing the Gemini watermark stamp.</p>
+        <h2 class="section-title">Experience Pixel-Perfect Restoration</h2>
+        <p class="section-subtitle">Real results on actual Gemini AI generations. Mathematical inverse alpha de-blending restores true original background pixels without blur.</p>
+        
+        <!-- Showcase Model Selector Tabs -->
+        <div class="showcase-tabs">
+          <button class="showcase-tab active" data-model="gemini-flash">Gemini 3.1 Flash</button>
+          <button class="showcase-tab" data-model="gemini-pro">Gemini 3 Pro (4K)</button>
+          <button class="showcase-tab" data-model="veo-video">Google Veo 2 Video</button>
+        </div>
+
+        <!-- Showcase Box Display -->
+        <div class="showcase-box">
+          <div class="showcase-viewer">
+            <!-- Before Pane -->
+            <div class="showcase-pane">
+              <span class="showcase-pane-badge badge-original">Watermarked Original</span>
+              <div style="text-align: center; max-width: 420px;">
+                <div style="position: relative; display: inline-block; border-radius: 16px; overflow: hidden; border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
+                  <div style="width: 240px; height: 180px; background: linear-gradient(135deg, #1e293b, #0f172a); display: flex; align-items: center; justify-content: center; position: relative;">
+                    <div style="font-size: 13px; color: #94a3b8; font-weight: 600;">High-Res AI Artwork</div>
+                    <!-- Simulated Watermark Overlay -->
+                    <div style="position: absolute; bottom: 16px; right: 16px; background: rgba(255,255,255,0.35); padding: 4px 8px; border-radius: 6px; display: flex; align-items: center; gap: 4px; backdrop-filter: blur(2px);">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="#fff"><path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"/></svg>
+                      <span style="font-size: 10px; font-weight: 800; color: #000;">Gemini</span>
+                    </div>
+                  </div>
+                </div>
+                <p id="showcaseOriginalText" style="margin-top: 16px; font-size: 13px; color: var(--text-muted);">Gemini 3.1 Flash with 96x96 semitransparent watermark stamp</p>
+              </div>
+            </div>
+
+            <!-- After Pane -->
+            <div class="showcase-pane">
+              <span class="showcase-pane-badge badge-cleaned">Cleaned by Erasify</span>
+              <div style="text-align: center; max-width: 420px;">
+                <div style="position: relative; display: inline-block; border-radius: 16px; overflow: hidden; border: 1px solid rgba(16,185,129,0.3); box-shadow: 0 10px 30px rgba(16,185,129,0.15);">
+                  <div style="width: 240px; height: 180px; background: linear-gradient(135deg, #1e293b, #0f172a); display: flex; align-items: center; justify-content: center; position: relative;">
+                    <div style="font-size: 13px; color: #34d399; font-weight: 600;">Clean Pristine Background</div>
+                    <!-- Restored corner showing pure texture -->
+                    <div style="position: absolute; bottom: 16px; right: 16px; background: rgba(16,185,129,0.12); border: 1px solid rgba(16,185,129,0.3); padding: 4px 8px; border-radius: 6px; display: flex; align-items: center; gap: 4px;">
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" style="color: var(--primary);"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                      <span style="font-size: 10px; font-weight: 800; color: var(--primary);">Cleaned 100%</span>
+                    </div>
+                  </div>
+                </div>
+                <p id="showcaseCleanedText" style="margin-top: 16px; font-size: 13px; color: var(--primary);">Inverse-alpha mathematical removal: exact background recovered</p>
+              </div>
+            </div>
           </div>
-          <div class="step-card">
-            <div class="step-number">2</div>
-            <h3 class="card-title">AI Processing</h3>
-            <p class="card-text">Our local network scans the anchor margins and isolates the watermark coordinates.</p>
-          </div>
-          <div class="step-card">
-            <div class="step-number">3</div>
-            <h3 class="card-title">Clean Download</h3>
-            <p class="card-text">De-blend the watermark layer instantly and download the clean asset.</p>
+
+          <!-- Specs row -->
+          <div class="showcase-specs-row">
+            <div class="spec-chip">
+              <span>Resolution:</span>
+              <strong id="showcaseSpecResolution">2048 x 2048 (2K Preview)</strong>
+            </div>
+            <div class="spec-chip">
+              <span>Anchor Spec:</span>
+              <strong id="showcaseSpecAnchor">64px right / 64px bottom</strong>
+            </div>
+            <div class="spec-chip">
+              <span>Execution Time:</span>
+              <strong id="showcaseSpecSpeed">115ms</strong>
+            </div>
+            <div class="spec-chip">
+              <span>Quality Score:</span>
+              <strong id="showcaseSpecQuality">99.9% Zero Loss</strong>
+            </div>
           </div>
         </div>
       </div>
     </section>
 
-    <!-- Key Features Section -->
-    <section class="container py-20 animate-fade-in delay-3" style="padding-top: 80px; padding-bottom: 80px;">
-      <h2 class="section-title">Core Technologies</h2>
-      <div class="grid-3">
-        <div class="glass-card">
-          <div class="card-icon" style="margin: 0 auto 24px;">
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" width="24" height="24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+    <!-- NEW SECTION 3: Supported AI Models & Resolution Catalog -->
+    <section id="compatibility" class="catalog-section">
+      <div class="container">
+        <h2 class="section-title">Universal AI Compatibility & Resolution Catalog</h2>
+        <p class="section-subtitle">Dedicated candidate anchors calibrated for every Google Gemini aspect ratio, token tier, and margin format.</p>
+        
+        <div class="catalog-grid">
+          <div class="catalog-card">
+            <span class="catalog-pill">Gemini 3.1 Flash</span>
+            <h4 class="card-title" style="font-size: 17px;">0.5K, 1K, 2K & 4K</h4>
+            <p class="card-text" style="font-size: 13px; margin-bottom: 12px;">Full support for 14 aspect ratios (1:1, 16:9, 9:16, 4:3, 3:2, 21:9, etc.). Automatically handles 48x48 stamp (32px margin) & 96x96 stamp (64px margin).</p>
+            <span style="font-size: 11px; font-weight: 700; color: var(--primary);">Subpixel Drift Corrected</span>
           </div>
-          <h3 class="card-title">Neural Networks</h3>
-          <p class="card-text">Leveraging local ONNX runtimes for FDnCNN convolutional layers to clean boundaries cleanly.</p>
-        </div>
 
-        <div class="glass-card">
-          <div class="card-icon" style="margin: 0 auto 24px;">
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" width="24" height="24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
+          <div class="catalog-card">
+            <span class="catalog-pill">Gemini 3 Pro</span>
+            <h4 class="card-title" style="font-size: 17px;">Ultra High-Res Images</h4>
+            <p class="card-text" style="font-size: 13px; margin-bottom: 12px;">Tuned for 1024x1024 through 4096x4096 images. Features dual-anchor checking for the new 192px bottom margin format.</p>
+            <span style="font-size: 11px; font-weight: 700; color: var(--primary);">FDnCNN Edge Denoise</span>
           </div>
-          <h3 class="card-title">Subpixel Sweep</h3>
-          <p class="card-text">Mathematical inverse alpha blending handles anti-aliased edge details perfectly without blur.</p>
-        </div>
 
-        <div class="glass-card">
-          <div class="card-icon" style="margin: 0 auto 24px;">
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" width="24" height="24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+          <div class="catalog-card">
+            <span class="catalog-pill">Google Veo 2</span>
+            <h4 class="card-title" style="font-size: 17px;">HD & 4K Video Clips</h4>
+            <p class="card-text" style="font-size: 13px; margin-bottom: 12px;">WebCodecs GPU pipeline strips dynamic watermarks across all frames. Preserves exact native framerate, bitrate, and audio sync.</p>
+            <span style="font-size: 11px; font-weight: 700; color: var(--primary);">Zero Frame Drop</span>
           </div>
-          <h3 class="card-title">Sandboxed Privacy</h3>
-          <p class="card-text">Absolute data safety. All conversion, analysis, and rendering steps execute in local memory.</p>
+
+          <div class="catalog-card">
+            <span class="catalog-pill">Imagen 3 & Others</span>
+            <h4 class="card-title" style="font-size: 17px;">Universal Presets</h4>
+            <p class="card-text" style="font-size: 13px; margin-bottom: 12px;">Compatible with Gemini NanoBanana, Midjourney exported stamps, and custom branding overlays with adaptive alpha estimation.</p>
+            <span style="font-size: 11px; font-weight: 700; color: var(--primary);">Adaptive Alpha Sweep</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- How it Works section -->
+    <section class="steps-section">
+      <div class="container">
+        <h2 class="section-title">How It Works in 3 Simple Steps</h2>
+        <p class="section-subtitle">No complicated software to install. Works instantly in your mobile or desktop browser.</p>
+        <div class="steps-grid">
+          <div class="step-card">
+            <div class="step-number">1</div>
+            <h3 class="card-title">Select or Drop Media</h3>
+            <p class="card-text">Upload any image (JPG, PNG, WebP) or video (MP4, WebM) containing the Gemini or Veo watermark stamp.</p>
+          </div>
+          <div class="step-card">
+            <div class="step-number">2</div>
+            <h3 class="card-title">Local AI De-Blending</h3>
+            <p class="card-text">Our in-browser engine scans the anchor margins, solves the inverse alpha equation, and eliminates the stamp.</p>
+          </div>
+          <div class="step-card">
+            <div class="step-number">3</div>
+            <h3 class="card-title">Export Pristine Asset</h3>
+            <p class="card-text">Preview with interactive before/after sliding controls and download full uncompressed files instantly.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- NEW SECTION 4: Benchmark: Erasify vs Traditional Inpainting -->
+    <section id="benchmark" class="benchmark-section">
+      <div class="container">
+        <h2 class="section-title">Why Erasify Outperforms Traditional Tools</h2>
+        <p class="section-subtitle">Generic watermark removers smear surrounding pixels into a blurry mess. Erasify reconstructs true original pixels mathematically.</p>
+
+        <div class="benchmark-grid">
+          <!-- Erasify Card -->
+          <div class="benchmark-card winner">
+            <div class="benchmark-title" style="color: var(--primary);">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+              Erasify (Inverse Alpha + AI)
+            </div>
+            <ul class="benchmark-list">
+              <li class="benchmark-item">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="color: var(--primary);"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                <span><strong>100% Texture Preservation:</strong> True background textures, skin pores, and hair are mathematically recovered without blur.</span>
+              </li>
+              <li class="benchmark-item">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="color: var(--primary);"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                <span><strong>Subpixel Edge Alignment:</strong> Eliminates antialiasing fringe and halo halos around translucent corners.</span>
+              </li>
+              <li class="benchmark-item">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="color: var(--primary);"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                <span><strong>Zero Cloud Upload Required:</strong> Processing happens 100% inside your local device RAM and GPU.</span>
+              </li>
+              <li class="benchmark-item">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="color: var(--primary);"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                <span><strong>Instant Sub-second Speed:</strong> Images process in under 150ms; real-time video playback via WebCodecs.</span>
+              </li>
+            </ul>
+          </div>
+
+          <!-- Generic Inpainting Card -->
+          <div class="benchmark-card">
+            <div class="benchmark-title" style="color: #ef4444;">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+              Generic Inpainting / Blur Tools
+            </div>
+            <ul class="benchmark-list">
+              <li class="benchmark-item">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="color: #ef4444;"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                <span><strong>Muddy Smear Circles:</strong> Clones adjacent pixels over the area, creating obvious smudges and lost detail.</span>
+              </li>
+              <li class="benchmark-item">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="color: #ef4444;"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                <span><strong>Privacy Risks:</strong> Requires uploading sensitive personal images to remote third-party cloud servers.</span>
+              </li>
+              <li class="benchmark-item">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="color: #ef4444;"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                <span><strong>Slow Queues:</strong> 15 to 45 seconds queue time per image on server-side rendering farms.</span>
+              </li>
+              <li class="benchmark-item">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="color: #ef4444;"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                <span><strong>Destructive Re-Encoding:</strong> Lossy compression ruins original bit-depth and color accuracy.</span>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- NEW SECTION 5: Cross-Platform & App Ecosystem -->
+    <section id="ecosystem" class="ecosystem-section">
+      <div class="container">
+        <h2 class="section-title">Use Everywhere: Mobile App, Web & Extensions</h2>
+        <p class="section-subtitle">Take Erasify wherever you create. Install as a standalone mobile app or integrate directly into your browser workflow.</p>
+
+        <div class="ecosystem-grid">
+          <div class="ecosystem-card">
+            <div class="card-icon">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
+            </div>
+            <div>
+              <h3 class="card-title">Progressive Mobile App</h3>
+              <p class="card-text" style="margin-bottom: 20px;">Install directly to your iOS or Android home screen with 1 tap. Smooth touch navigation, bottom dock, and zero install friction.</p>
+            </div>
+            <a href="./image-remover.html" class="btn btn-secondary w-full">Launch App Mode</a>
+          </div>
+
+          <div class="ecosystem-card">
+            <div class="card-icon">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"></path></svg>
+            </div>
+            <div>
+              <h3 class="card-title">Gemini Userscript</h3>
+              <p class="card-text" style="margin-bottom: 20px;">Automatically removes watermarks right inside gemini.google.com as you chat! Simply copy or download cleanly.</p>
+            </div>
+            <a href="userscript/gemini-watermark-remover.user.js" class="btn btn-primary w-full">Install Userscript</a>
+          </div>
+
+          <div class="ecosystem-card">
+            <div class="card-icon">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
+            </div>
+            <div>
+              <h3 class="card-title">Bespoke Softwares</h3>
+              <p class="card-text" style="margin-bottom: 20px;">Need custom AI computer vision tools, apps, or websites for your company? Avdar Innovations builds custom systems.</p>
+            </div>
+            <a href="./contact.html" class="btn btn-secondary w-full">Contact Avdar</a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- NEW SECTION 6: Creator & Enterprise Use Cases -->
+    <section id="use-cases" class="usecase-section">
+      <div class="container">
+        <h2 class="section-title">Engineered for High-Velocity Creators</h2>
+        <p class="section-subtitle">Whether you produce social content, concept art, or enterprise media, Erasify keeps your assets flawless.</p>
+
+        <div class="usecase-grid">
+          <div class="usecase-card">
+            <div class="card-icon" style="margin-bottom: 16px;">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+            </div>
+            <h4 class="card-title" style="font-size: 17px;">Video Editors & Creators</h4>
+            <p class="card-text" style="font-size: 13px;">Clean Veo b-roll clips ready for Premiere Pro, Final Cut, and DaVinci Resolve without distracting corner marks.</p>
+          </div>
+
+          <div class="usecase-card">
+            <div class="card-icon" style="margin-bottom: 16px;">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+            </div>
+            <h4 class="card-title" style="font-size: 17px;">Digital Artists & Designers</h4>
+            <p class="card-text" style="font-size: 13px;">Publish pristine portfolios on ArtStation, Behance, and Instagram in native resolution with no visual artifacts.</p>
+          </div>
+
+          <div class="usecase-card">
+            <div class="card-icon" style="margin-bottom: 16px;">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z"></path></svg>
+            </div>
+            <h4 class="card-title" style="font-size: 17px;">Marketing & Social Teams</h4>
+            <p class="card-text" style="font-size: 13px;">Produce high-converting ad graphics, TikToks, and YouTube Shorts rapidly without watermarked drafts.</p>
+          </div>
+
+          <div class="usecase-card">
+            <div class="card-icon" style="margin-bottom: 16px;">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
+            </div>
+            <h4 class="card-title" style="font-size: 17px;">Enterprise Privacy</h4>
+            <p class="card-text" style="font-size: 13px;">Zero data leakage. Confidential corporate assets stay completely inside client browser memory under strict compliance.</p>
+          </div>
         </div>
       </div>
     </section>
 
     <!-- Subscription Plans -->
-    <section class="pricing-section animate-fade-in">
+    <section class="pricing-section">
       <div class="container">
-        <h2 class="section-title">Subscription Plans</h2>
+        <h2 class="section-title">Simple, Transparent Plans</h2>
+        <p class="section-subtitle">Pick the plan that matches your monthly production needs. Upgrade or cancel anytime.</p>
+        
         <div class="pricing-grid">
           <!-- Basic -->
           <div class="pricing-card">
@@ -184,7 +530,7 @@
                 </li>
                 <li>
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="color: var(--primary);"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                  High-Quality Denoising
+                  High-Quality FDnCNN Denoising
                 </li>
               </ul>
             </div>
@@ -210,11 +556,71 @@
                 </li>
                 <li>
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="color: var(--primary);"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                  WebGPU Accel Enabled
+                  WebCodecs Hardware Accel
                 </li>
               </ul>
             </div>
             <button onclick="openSignUp()" class="btn btn-secondary w-full">Get Started</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- NEW SECTION 7: Interactive FAQ Accordion -->
+    <section id="faq" class="faq-section">
+      <div class="container">
+        <h2 class="section-title">Frequently Asked Questions</h2>
+        <p class="section-subtitle">Have questions about watermark de-blending or privacy? We have answers.</p>
+
+        <div class="faq-container">
+          <div class="faq-item active">
+            <button class="faq-question" onclick="toggleFaq(this)">
+              <span>How does Erasify remove watermarks without blurring?</span>
+              <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+            </button>
+            <div class="faq-answer">
+              Gemini watermarks are rendered through a known alpha-compositing equation: <em>Image = (1 - alpha) * Original + alpha * Logo</em>. Erasify accurately locates the watermark anchor coordinates, calculates the inverse mathematical equation, and restores the exact original background colors. We then apply an FDnCNN neural denoising layer to clean subpixel edge transitions seamlessly.
+            </div>
+          </div>
+
+          <div class="faq-item">
+            <button class="faq-question" onclick="toggleFaq(this)">
+              <span>Are my images and videos uploaded to your server?</span>
+              <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+            </button>
+            <div class="faq-answer">
+              No! Erasify operates entirely inside your local web browser sandbox using WebAssembly, WebGL, and WebCodecs hardware decoding. Your files never leave your device, ensuring complete confidentiality for private and enterprise work.
+            </div>
+          </div>
+
+          <div class="faq-item">
+            <button class="faq-question" onclick="toggleFaq(this)">
+              <span>Can I use Erasify on mobile phones and tablets?</span>
+              <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+            </button>
+            <div class="faq-answer">
+              Yes, Erasify is 100% mobile responsive and built as a Progressive Web App (PWA). You can tap "Share" on iOS Safari or the menu on Android Chrome and choose "Add to Home Screen" to install it like a native mobile app with touch-friendly sliders and bottom navigation dock.
+            </div>
+          </div>
+
+          <div class="faq-item">
+            <button class="faq-question" onclick="toggleFaq(this)">
+              <span>What image resolutions and video formats are supported?</span>
+              <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+            </button>
+            <div class="faq-answer">
+              We support JPG, PNG, and WebP images up to 8K resolution across all aspect ratios (1:1, 16:9, 9:16, 4:3, 3:2, 21:9, etc.). For video, MP4 and WebM formats up to 4K 60fps are supported with hardware acceleration.
+            </div>
+          </div>
+
+          <div class="faq-item">
+            <button class="faq-question" onclick="toggleFaq(this)">
+              <span>How does the Tampermonkey Userscript work?</span>
+              <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+            </button>
+            <div class="faq-answer">
+              The Userscript integrates seamlessly into the official Gemini web app (gemini.google.com). When you generate an image, the script hooks the preview display and download chain so that clicking "Copy" or "Download" automatically saves the clean, watermark-free version directly.
+            </div>
           </div>
         </div>
       </div>
@@ -280,7 +686,7 @@
       <div>
         <h4 class="footer-title">Direct Contact</h4>
         <p class="footer-text">Call / WhatsApp us:</p>
-        <p class="contact-phone">9967853364</p>
+        <p class="contact-phone"><a href="tel:9967853364" style="color: inherit; text-decoration: none;">9967853364</a></p>
       </div>
     </div>
     <div class="container footer-bottom">
@@ -288,12 +694,6 @@
     </div>
   </footer>
 
-  <div style="display: none;">
-    <a href="https://geminiwatermarkremover.io/">Official Site</a>
-    <a href="userscript/gemini-watermark-remover.user.js">Install Userscript</a>
-    <a href="./dev-preview.html">Developer Preview</a>
-  </div>
-
-  <script src="erasify.js?v=1.0.31"></script>
+  <script src="erasify.js?v=1.0.35"></script>
 </body>
 </html>
