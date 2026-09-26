@@ -65,8 +65,8 @@ async function buildApk() {
   const manifestContent = `<?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="io.erasify.app"
-    android:versionCode="4"
-    android:versionName="1.0.3">
+    android:versionCode="5"
+    android:versionName="1.0.4">
 
     <uses-sdk
         android:minSdkVersion="21"
@@ -268,14 +268,24 @@ public class MainActivity extends Activity {
             @Override
             public void onPageFinished(WebView view, String url) {
                 super.onPageFinished(view, url);
-                // Strip website header & footer via injected CSS
+                // Strip ALL website chrome: header, footer, mobile drawer, OWN bottom bar
                 String css =
-                    "header.app-header,nav.header-nav,.navbar,.app-header,.mobile-menu-btn," +
-                    "#mobileMenu,.nav-overlay{display:none!important}" +
+                    // Hide website header & hamburger
+                    "header.app-header,nav.header-nav,.navbar,.app-header," +
+                    ".mobile-menu-btn,#mobileMenu,.header-actions{display:none!important}" +
+                    // Hide website's own bottom tab bar (the one with huge SVG icons)
+                    "nav.bottom-app-bar,.bottom-app-bar,.bottom-tab{display:none!important}" +
+                    // Hide mobile drawer & backdrop
+                    ".mobile-drawer,.mobile-backdrop,.mobile-nav,.mobile-overlay{display:none!important}" +
+                    // Hide footer
                     "footer,.app-footer,.mobile-bottom-dock,.bottom-dock{display:none!important}" +
+                    // Fix body padding (header was 72px, bottom bar was 68px)
                     "body{padding-top:0!important;padding-bottom:0!important;margin-top:0!important}" +
-                    ".hero-section,.page-hero{padding-top:16px!important}" +
-                    ".tool-section,.page-section{padding-top:12px!important}";
+                    // Fix hero section which had padding-top for the header
+                    ".hero{padding-top:20px!important}" +
+                    ".hero-section,.page-hero,.hero.container{padding-top:20px!important}" +
+                    // Fix main content area
+                    "main.flex-grow{padding-bottom:4px!important}";
                 view.evaluateJavascript(
                     "(function(){" +
                     "var s=document.getElementById('__gx__');" +
@@ -283,6 +293,7 @@ public class MainActivity extends Activity {
                     "s.textContent='" + css + "';" +
                     "})()", null
                 );
+
                 // Sync native tab highlight with current URL
                 if (url != null) {
                     for (int i = 0; i < TAB_KEYS.length; i++) {
