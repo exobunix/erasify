@@ -1,4 +1,4 @@
-import { existsSync, mkdirSync, writeFileSync, copyFileSync, rmSync, statSync } from 'node:fs';
+import { existsSync, mkdirSync, writeFileSync, copyFileSync, rmSync, statSync, readdirSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { execSync } from 'node:child_process';
 
@@ -29,6 +29,19 @@ function run(cmd, desc) {
   execSync(cmd, { stdio: 'inherit', cwd: ROOT_DIR, env });
 }
 
+// Recursively find all .class files in a directory
+function findClassFiles(dir) {
+  const results = [];
+  if (!existsSync(dir)) return results;
+  const items = readdirSync(dir, { withFileTypes: true });
+  for (const item of items) {
+    const full = join(dir, item.name);
+    if (item.isDirectory()) results.push(...findClassFiles(full));
+    else if (item.name.endsWith('.class')) results.push(full);
+  }
+  return results;
+}
+
 async function buildApk() {
   console.log('═══════════════════════════════════════════════════════════════');
   console.log('📱 Building Erasify Native Android APK');
@@ -39,9 +52,7 @@ async function buildApk() {
   if (!existsSync(ANDROID_JAR)) throw new Error(`android.jar not found at ${ANDROID_JAR}`);
 
   // Clean and prepare directories
-  if (existsSync(BUILD_DIR)) {
-    rmSync(BUILD_DIR, { recursive: true, force: true });
-  }
+  if (existsSync(BUILD_DIR)) rmSync(BUILD_DIR, { recursive: true, force: true });
   mkdirSync(BUILD_DIR, { recursive: true });
   mkdirSync(join(BUILD_DIR, 'res', 'values'), { recursive: true });
   mkdirSync(join(BUILD_DIR, 'res', 'drawable'), { recursive: true });
@@ -54,8 +65,8 @@ async function buildApk() {
   const manifestContent = `<?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="io.erasify.app"
-    android:versionCode="3"
-    android:versionName="1.0.2">
+    android:versionCode="4"
+    android:versionName="1.0.3">
 
     <uses-sdk
         android:minSdkVersion="21"
@@ -100,30 +111,26 @@ async function buildApk() {
 </resources>`;
   writeFileSync(join(BUILD_DIR, 'res', 'values', 'strings.xml'), stringsContent, 'utf8');
 
-  // 3. Icon (Must be valid PNG signature for aapt2)
+  // 3. Icon
   const iconCandidates = [
     join(ROOT_DIR, 'dist', 'extension', 'assets', 'icon-128.png'),
     join(ROOT_DIR, 'dist', 'extension', 'assets', 'icon-48.png'),
     join(ROOT_DIR, 'public', 'logo.png')
   ];
-  let iconFound = false;
   for (const src of iconCandidates) {
-    if (existsSync(src)) {
-      copyFileSync(src, join(BUILD_DIR, 'res', 'drawable', 'icon.png'));
-      iconFound = true;
-      break;
-    }
+    if (existsSync(src)) { copyFileSync(src, join(BUILD_DIR, 'res', 'drawable', 'icon.png')); break; }
   }
 
-  // 4. MainActivity.java
+  // 4. MainActivity.java — Native bottom nav bar (no HTML/CSS nav, pure Android views)
   const javaContent = `package io.erasify.app;
 
 import android.app.Activity;
 import android.content.Intent;
 import android.graphics.Color;
+import android.graphics.Typeface;
 import android.net.Uri;
-import android.os.Build;
 import android.os.Bundle;
+import android.view.Gravity;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.Window;
@@ -134,54 +141,112 @@ import android.webkit.WebChromeClient;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
-import android.widget.FrameLayout;
+import android.widget.LinearLayout;
+import android.widget.TextView;
 
 public class MainActivity extends Activity {
     private WebView webView;
     private ValueCallback<Uri[]> uploadMessage;
-    private final static int FILECHOOSER_RESULTCODE = 1;
+    private static final int FILECHOOSER_RESULTCODE = 1;
+    private LinearLayout[] tabViews;
+
+    private static final String[] TAB_URLS = {
+        "https://erasify-nine.vercel.app/app.html",
+        "https://erasify-nine.vercel.app/image-remover.html",
+        "https://erasify-nine.vercel.app/video-remover.html",
+        "https://erasify-nine.vercel.app/profile.html"
+    };
+    private static final String[] TAB_KEYS = { "app.html", "image-remover", "video-remover", "profile" };
+    private static final String[] TAB_ICONS = { "\\uD83C\\uDFE0", "\\uD83D\\uDDBC", "\\uD83C\\uDFAC", "\\uD83D\\uDC64" };
+    private static final String[] TAB_LABELS = { "Home", "Image", "Video", "Profile" };
+    private static final String C_ACTIVE = "#10b981";
+    private static final String C_INACTIVE = "#6b7280";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
-        // Fullscreen immersive layout
         requestWindowFeature(Window.FEATURE_NO_TITLE);
         getWindow().setFlags(
             WindowManager.LayoutParams.FLAG_FULLSCREEN,
             WindowManager.LayoutParams.FLAG_FULLSCREEN
         );
 
-        FrameLayout layout = new FrameLayout(this);
-        layout.setBackgroundColor(Color.parseColor("#060d0d"));
+        // Root: vertical LinearLayout (WebView takes all space, nav fixed at bottom)
+        LinearLayout root = new LinearLayout(this);
+        root.setOrientation(LinearLayout.VERTICAL);
+        root.setBackgroundColor(Color.parseColor("#040806"));
+
+        // WebView — flex-grows to fill all space above nav
         webView = new WebView(this);
-        layout.addView(webView, new FrameLayout.LayoutParams(
-            FrameLayout.LayoutParams.MATCH_PARENT,
-            FrameLayout.LayoutParams.MATCH_PARENT
+        root.addView(webView, new LinearLayout.LayoutParams(
+            LinearLayout.LayoutParams.MATCH_PARENT, 0, 1f
         ));
-        setContentView(layout);
 
-        WebSettings settings = webView.getSettings();
-        settings.setJavaScriptEnabled(true);
-        settings.setDomStorageEnabled(true);
-        settings.setDatabaseEnabled(true);
-        settings.setAllowFileAccess(true);
-        settings.setAllowContentAccess(true);
-        settings.setUseWideViewPort(true);
-        settings.setLoadWithOverviewMode(true);
-        settings.setSupportZoom(true);
-        settings.setBuiltInZoomControls(false);
-        settings.setDisplayZoomControls(false);
-        settings.setMediaPlaybackRequiresUserGesture(false);
-        settings.setCacheMode(WebSettings.LOAD_DEFAULT);
-        settings.setMixedContentMode(WebSettings.MIXED_CONTENT_ALWAYS_ALLOW);
-        // Mobile user-agent for proper responsive layout
-        settings.setUserAgentString("Mozilla/5.0 (Linux; Android 12; Pixel 6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/112.0.0.0 Mobile Safari/537.36");
+        // Native bottom nav bar
+        tabViews = new LinearLayout[TAB_LABELS.length];
+        LinearLayout bottomNav = new LinearLayout(this);
+        bottomNav.setOrientation(LinearLayout.HORIZONTAL);
+        bottomNav.setBackgroundColor(Color.parseColor("#06100a"));
+        bottomNav.setPadding(0, dp(1), 0, 0);
+        root.addView(bottomNav, new LinearLayout.LayoutParams(
+            LinearLayout.LayoutParams.MATCH_PARENT, dp(68)
+        ));
 
-        // Enable cookies
-        CookieManager cookieManager = CookieManager.getInstance();
-        cookieManager.setAcceptCookie(true);
-        cookieManager.setAcceptThirdPartyCookies(webView, true);
+        for (int i = 0; i < TAB_LABELS.length; i++) {
+            final int idx = i;
+            LinearLayout tab = new LinearLayout(this);
+            tab.setOrientation(LinearLayout.VERTICAL);
+            tab.setGravity(Gravity.CENTER);
+            tab.setLayoutParams(new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.MATCH_PARENT, 1f));
+            tab.setClickable(true);
+            tab.setFocusable(true);
+
+            TextView icon = new TextView(this);
+            icon.setText(TAB_ICONS[i]);
+            icon.setTextSize(22);
+            icon.setGravity(Gravity.CENTER);
+            icon.setTextColor(i == 0 ? Color.parseColor(C_ACTIVE) : Color.parseColor(C_INACTIVE));
+
+            TextView lbl = new TextView(this);
+            lbl.setText(TAB_LABELS[i]);
+            lbl.setTextSize(10);
+            lbl.setTypeface(null, Typeface.BOLD);
+            lbl.setGravity(Gravity.CENTER);
+            lbl.setTextColor(i == 0 ? Color.parseColor(C_ACTIVE) : Color.parseColor(C_INACTIVE));
+            lbl.setPadding(0, dp(2), 0, 0);
+
+            tab.addView(icon);
+            tab.addView(lbl);
+            tab.setOnClickListener(new View.OnClickListener() {
+                @Override public void onClick(View v) { navigateTo(idx); }
+            });
+
+            tabViews[i] = tab;
+            bottomNav.addView(tab);
+        }
+
+        setContentView(root);
+
+        // WebView settings
+        WebSettings ws = webView.getSettings();
+        ws.setJavaScriptEnabled(true);
+        ws.setDomStorageEnabled(true);
+        ws.setDatabaseEnabled(true);
+        ws.setAllowFileAccess(true);
+        ws.setAllowContentAccess(true);
+        ws.setUseWideViewPort(true);
+        ws.setLoadWithOverviewMode(true);
+        ws.setSupportZoom(true);
+        ws.setBuiltInZoomControls(false);
+        ws.setDisplayZoomControls(false);
+        ws.setMediaPlaybackRequiresUserGesture(false);
+        ws.setCacheMode(WebSettings.LOAD_DEFAULT);
+        ws.setMixedContentMode(WebSettings.MIXED_CONTENT_ALWAYS_ALLOW);
+        ws.setUserAgentString("Mozilla/5.0 (Linux; Android 12; Pixel 6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/112.0.0.0 Mobile Safari/537.36");
+
+        CookieManager cm = CookieManager.getInstance();
+        cm.setAcceptCookie(true);
+        cm.setAcceptThirdPartyCookies(webView, true);
 
         webView.setWebViewClient(new WebViewClient() {
             @Override
@@ -189,78 +254,81 @@ public class MainActivity extends Activity {
                 if (url == null) return false;
                 if (url.startsWith("tel:") || url.startsWith("whatsapp:") ||
                     url.startsWith("https://wa.me") || url.startsWith("mailto:")) {
-                    try {
-                        Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
-                        startActivity(intent);
-                        return true;
-                    } catch (Exception e) {
-                        return false;
-                    }
+                    try { startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(url))); return true; }
+                    catch (Exception e) { return false; }
                 }
-                // Keep all erasify/vercel URLs inside the WebView
                 if (url.contains("erasify") || url.contains("vercel.app")) {
-                    view.loadUrl(url);
-                    return true;
+                    view.loadUrl(url); return true;
                 }
-                // Open external links in external browser
-                try {
-                    Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
-                    startActivity(intent);
-                } catch (Exception e) {
-                    view.loadUrl(url);
-                }
+                try { startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(url))); }
+                catch (Exception e) { view.loadUrl(url); }
                 return true;
             }
 
             @Override
             public void onPageFinished(WebView view, String url) {
                 super.onPageFinished(view, url);
-                // Inject CSS to hide website header & footer on tool pages
-                String injectCss =
+                // Strip website header & footer via injected CSS
+                String css =
+                    "header.app-header,nav.header-nav,.navbar,.app-header,.mobile-menu-btn," +
+                    "#mobileMenu,.nav-overlay{display:none!important}" +
+                    "footer,.app-footer,.mobile-bottom-dock,.bottom-dock{display:none!important}" +
+                    "body{padding-top:0!important;padding-bottom:0!important;margin-top:0!important}" +
+                    ".hero-section,.page-hero{padding-top:16px!important}" +
+                    ".tool-section,.page-section{padding-top:12px!important}";
+                view.evaluateJavascript(
                     "(function(){" +
-                    "  if(document.getElementById('__app_css__')) return;" +
-                    "  var s=document.createElement('style');" +
-                    "  s.id='__app_css__';" +
-                    "  s.textContent=" +
-                    "    'header.app-header,nav.header-nav,.navbar,.mobile-menu-btn,#mobileMenu{display:none!important}' +" +
-                    "    'footer,.app-footer,.mobile-bottom-dock{display:none!important}' +" +
-                    "    'body{padding-top:0!important;padding-bottom:0!important}';" +
-                    "  document.head.appendChild(s);" +
-                    "})();";
-                view.evaluateJavascript(injectCss, null);
+                    "var s=document.getElementById('__gx__');" +
+                    "if(!s){s=document.createElement('style');s.id='__gx__';document.head.appendChild(s);}" +
+                    "s.textContent='" + css + "';" +
+                    "})()", null
+                );
+                // Sync native tab highlight with current URL
+                if (url != null) {
+                    for (int i = 0; i < TAB_KEYS.length; i++) {
+                        final boolean active = url.contains(TAB_KEYS[i]);
+                        final int fi = i;
+                        runOnUiThread(new Runnable() {
+                            @Override public void run() { setTabActive(fi, active); }
+                        });
+                    }
+                }
             }
         });
 
         webView.setWebChromeClient(new WebChromeClient() {
             @Override
-            public boolean onShowFileChooser(WebView wv, ValueCallback<Uri[]> filePathCallback, FileChooserParams fileChooserParams) {
-                if (uploadMessage != null) {
-                    uploadMessage.onReceiveValue(null);
-                    uploadMessage = null;
-                }
+            public boolean onShowFileChooser(WebView wv, ValueCallback<Uri[]> filePathCallback,
+                                             FileChooserParams params) {
+                if (uploadMessage != null) { uploadMessage.onReceiveValue(null); uploadMessage = null; }
                 uploadMessage = filePathCallback;
                 Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
                 intent.addCategory(Intent.CATEGORY_OPENABLE);
                 intent.setType("*/*");
                 intent.putExtra(Intent.EXTRA_MIME_TYPES, new String[]{"image/*", "video/*"});
-                try {
-                    startActivityForResult(Intent.createChooser(intent, "Select Media"), FILECHOOSER_RESULTCODE);
-                } catch (Exception e) {
-                    uploadMessage = null;
-                    return false;
-                }
+                try { startActivityForResult(Intent.createChooser(intent, "Select Media"), FILECHOOSER_RESULTCODE); }
+                catch (Exception e) { uploadMessage = null; return false; }
                 return true;
             }
         });
 
-        // Hide system UI for immersive experience
-        webView.setSystemUiVisibility(
-            View.SYSTEM_UI_FLAG_LAYOUT_STABLE |
-            View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION |
-            View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
-        );
+        webView.loadUrl(TAB_URLS[0]);
+    }
 
-        webView.loadUrl("https://erasify-nine.vercel.app/app.html");
+    private void navigateTo(int idx) {
+        for (int i = 0; i < tabViews.length; i++) setTabActive(i, i == idx);
+        webView.loadUrl(TAB_URLS[idx]);
+    }
+
+    private void setTabActive(int idx, boolean active) {
+        if (tabViews == null || idx >= tabViews.length || tabViews[idx] == null) return;
+        int color = active ? Color.parseColor(C_ACTIVE) : Color.parseColor(C_INACTIVE);
+        ((TextView) tabViews[idx].getChildAt(0)).setTextColor(color);
+        ((TextView) tabViews[idx].getChildAt(1)).setTextColor(color);
+    }
+
+    private int dp(int v) {
+        return (int)(v * getResources().getDisplayMetrics().density);
     }
 
     @Override
@@ -268,47 +336,26 @@ public class MainActivity extends Activity {
         if (requestCode == FILECHOOSER_RESULTCODE) {
             if (uploadMessage == null) return;
             Uri[] results = null;
-            if (resultCode == Activity.RESULT_OK && intent != null) {
-                String dataString = intent.getDataString();
-                if (dataString != null) {
-                    results = new Uri[]{Uri.parse(dataString)};
-                }
+            if (resultCode == RESULT_OK && intent != null) {
+                String d = intent.getDataString();
+                if (d != null) results = new Uri[]{Uri.parse(d)};
             }
             uploadMessage.onReceiveValue(results);
             uploadMessage = null;
-        } else {
-            super.onActivityResult(requestCode, resultCode, intent);
-        }
+        } else super.onActivityResult(requestCode, resultCode, intent);
     }
 
     @Override
     public boolean onKeyDown(int keyCode, KeyEvent event) {
         if (keyCode == KeyEvent.KEYCODE_BACK && webView.canGoBack()) {
-            webView.goBack();
-            return true;
+            webView.goBack(); return true;
         }
         return super.onKeyDown(keyCode, event);
     }
 
-    @Override
-    protected void onResume() {
-        super.onResume();
-        webView.onResume();
-        CookieManager.getInstance().flush();
-    }
-
-    @Override
-    protected void onPause() {
-        super.onPause();
-        webView.onPause();
-        CookieManager.getInstance().flush();
-    }
-
-    @Override
-    protected void onDestroy() {
-        webView.destroy();
-        super.onDestroy();
-    }
+    @Override protected void onResume() { super.onResume(); webView.onResume(); CookieManager.getInstance().flush(); }
+    @Override protected void onPause() { super.onPause(); webView.onPause(); CookieManager.getInstance().flush(); }
+    @Override protected void onDestroy() { webView.destroy(); super.onDestroy(); }
 }
 `;
   writeFileSync(join(BUILD_DIR, 'src', 'io', 'erasify', 'app', 'MainActivity.java'), javaContent, 'utf8');
@@ -324,23 +371,17 @@ public class MainActivity extends Activity {
     'Linking Resources & Generating R.java'
   );
 
-  // Step 3: Compile Java with javac
+  // Step 3: Compile Java
   const rJava = join(BUILD_DIR, 'gen', 'io', 'erasify', 'app', 'R.java');
   const mainJava = join(BUILD_DIR, 'src', 'io', 'erasify', 'app', 'MainActivity.java');
   run(
     `"${JAVAC}" -encoding UTF-8 -source 8 -target 8 -cp "${ANDROID_JAR}" -d "${join(BUILD_DIR, 'bin')}" "${rJava}" "${mainJava}"`,
-    'Compiling Java Classes (Java 8 target)'
+    'Compiling Java Classes'
   );
 
-  // Step 4: Convert class files to Dalvik classes.dex with d8
-  const classFiles = [
-    join(BUILD_DIR, 'bin', 'io', 'erasify', 'app', 'MainActivity.class'),
-    join(BUILD_DIR, 'bin', 'io', 'erasify', 'app', 'MainActivity$1.class'),
-    join(BUILD_DIR, 'bin', 'io', 'erasify', 'app', 'MainActivity$2.class'),
-    join(BUILD_DIR, 'bin', 'io', 'erasify', 'app', 'R.class'),
-    join(BUILD_DIR, 'bin', 'io', 'erasify', 'app', 'R$drawable.class'),
-    join(BUILD_DIR, 'bin', 'io', 'erasify', 'app', 'R$string.class')
-  ].filter(existsSync);
+  // Step 4: Find ALL .class files (handles any number of anonymous classes)
+  const classFiles = findClassFiles(join(BUILD_DIR, 'bin'));
+  console.log(`\n📦 Found ${classFiles.length} class files for DEX compilation`);
 
   run(
     `"${D8}" --lib "${ANDROID_JAR}" --output "${join(BUILD_DIR, 'dex')}" ${classFiles.map(f => `"${f}"`).join(' ')}`,
@@ -355,43 +396,37 @@ public class MainActivity extends Activity {
 
   // Step 6: Zipalign
   const alignedApk = join(BUILD_DIR, 'aligned.apk');
-  run(
-    `"${ZIPALIGN}" -f -p 4 "${unalignedApk}" "${alignedApk}"`,
-    'Aligning APK with zipalign'
-  );
+  run(`"${ZIPALIGN}" -f -p 4 "${unalignedApk}" "${alignedApk}"`, 'Aligning APK');
 
   // Step 7: Generate Keystore if needed
   const keystorePath = join(BUILD_DIR, 'erasify.keystore');
   if (!existsSync(keystorePath)) {
     run(
       `"${KEYTOOL}" -genkeypair -v -keystore "${keystorePath}" -alias erasify -keyalg RSA -keysize 2048 -validity 10000 -storepass erasify123 -keypass erasify123 -dname "CN=Erasify, OU=Avdar, O=Avdar Innovations, L=Mumbai, ST=Maharashtra, C=IN"`,
-      'Generating Signing Keystore'
+      'Generating Keystore'
     );
   }
 
-  // Step 8: Sign with apksigner
+  // Step 8: Sign
   const finalApk = join(ROOT_DIR, 'Erasify.apk');
   run(
     `"${APKSIGNER}" sign --ks "${keystorePath}" --ks-key-alias erasify --ks-pass pass:erasify123 --key-pass pass:erasify123 --out "${finalApk}" "${alignedApk}"`,
-    'Signing APK with apksigner'
+    'Signing APK'
   );
 
-  // Step 9: Verify signature
+  // Step 9: Verify
   run(`"${APKSIGNER}" verify "${finalApk}"`, 'Verifying APK Signature');
 
-  // Also place in public and dist for download link
+  // Copy to public/dist
   const publicApk = join(ROOT_DIR, 'public', 'Erasify.apk');
   const distApk = join(ROOT_DIR, 'dist', 'Erasify.apk');
   copyFileSync(finalApk, publicApk);
-  if (existsSync(join(ROOT_DIR, 'dist'))) {
-    copyFileSync(finalApk, distApk);
-  }
+  if (existsSync(join(ROOT_DIR, 'dist'))) copyFileSync(finalApk, distApk);
 
   const stat = statSync(finalApk);
   console.log('\n═══════════════════════════════════════════════════════════════');
   console.log(`🎉 SUCCESS! Native Android APK Generated:`);
   console.log(`📦 File: ${finalApk} (${(stat.size / 1024).toFixed(1)} KB)`);
-  console.log(`🌐 Public Download URL: /Erasify.apk`);
   console.log('═══════════════════════════════════════════════════════════════\n');
 }
 
