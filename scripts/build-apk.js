@@ -54,27 +54,36 @@ async function buildApk() {
   const manifestContent = `<?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="io.erasify.app"
-    android:versionCode="1"
-    android:versionName="1.0.0">
+    android:versionCode="2"
+    android:versionName="1.0.1">
+
+    <uses-sdk
+        android:minSdkVersion="21"
+        android:targetSdkVersion="34" />
 
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
-    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
-    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"
+        android:maxSdkVersion="32" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"
+        android:maxSdkVersion="28" />
     <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
     <uses-permission android:name="android.permission.READ_MEDIA_VIDEO" />
 
     <application
         android:label="@string/app_name"
         android:icon="@drawable/icon"
-        android:theme="@android:style/Theme.NoTitleBar"
+        android:theme="@android:style/Theme.NoTitleBar.Fullscreen"
         android:hardwareAccelerated="true"
         android:usesCleartextTraffic="true"
-        android:supportsRtl="true">
+        android:supportsRtl="true"
+        android:allowBackup="true">
         <activity
             android:name="io.erasify.app.MainActivity"
             android:exported="true"
-            android:configChanges="orientation|screenSize|keyboardHidden">
+            android:screenOrientation="portrait"
+            android:windowSoftInputMode="adjustResize"
+            android:configChanges="orientation|screenSize|keyboardHidden|keyboard|navigation">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
@@ -111,10 +120,15 @@ async function buildApk() {
 
 import android.app.Activity;
 import android.content.Intent;
+import android.graphics.Color;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.view.KeyEvent;
 import android.view.View;
+import android.view.Window;
+import android.view.WindowManager;
+import android.webkit.CookieManager;
 import android.webkit.ValueCallback;
 import android.webkit.WebChromeClient;
 import android.webkit.WebSettings;
@@ -131,7 +145,15 @@ public class MainActivity extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        // Fullscreen immersive layout
+        requestWindowFeature(Window.FEATURE_NO_TITLE);
+        getWindow().setFlags(
+            WindowManager.LayoutParams.FLAG_FULLSCREEN,
+            WindowManager.LayoutParams.FLAG_FULLSCREEN
+        );
+
         FrameLayout layout = new FrameLayout(this);
+        layout.setBackgroundColor(Color.parseColor("#060d0d"));
         webView = new WebView(this);
         layout.addView(webView, new FrameLayout.LayoutParams(
             FrameLayout.LayoutParams.MATCH_PARENT,
@@ -147,13 +169,26 @@ public class MainActivity extends Activity {
         settings.setAllowContentAccess(true);
         settings.setUseWideViewPort(true);
         settings.setLoadWithOverviewMode(true);
-        settings.setSupportZoom(false);
+        settings.setSupportZoom(true);
+        settings.setBuiltInZoomControls(false);
+        settings.setDisplayZoomControls(false);
         settings.setMediaPlaybackRequiresUserGesture(false);
+        settings.setCacheMode(WebSettings.LOAD_DEFAULT);
+        settings.setMixedContentMode(WebSettings.MIXED_CONTENT_ALWAYS_ALLOW);
+        // Mobile user-agent for proper responsive layout
+        settings.setUserAgentString("Mozilla/5.0 (Linux; Android 12; Pixel 6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/112.0.0.0 Mobile Safari/537.36");
+
+        // Enable cookies
+        CookieManager cookieManager = CookieManager.getInstance();
+        cookieManager.setAcceptCookie(true);
+        cookieManager.setAcceptThirdPartyCookies(webView, true);
 
         webView.setWebViewClient(new WebViewClient() {
             @Override
             public boolean shouldOverrideUrlLoading(WebView view, String url) {
-                if (url.startsWith("tel:") || url.startsWith("https://wa.me") || url.startsWith("whatsapp:")) {
+                if (url == null) return false;
+                if (url.startsWith("tel:") || url.startsWith("whatsapp:") ||
+                    url.startsWith("https://wa.me") || url.startsWith("mailto:")) {
                     try {
                         Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
                         startActivity(intent);
@@ -162,24 +197,34 @@ public class MainActivity extends Activity {
                         return false;
                     }
                 }
-                view.loadUrl(url);
+                // Keep all erasify/vercel URLs inside the WebView
+                if (url.contains("erasify") || url.contains("vercel.app")) {
+                    view.loadUrl(url);
+                    return true;
+                }
+                // Open external links in browser
+                try {
+                    Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
+                    startActivity(intent);
+                } catch (Exception e) {
+                    view.loadUrl(url);
+                }
                 return true;
             }
         });
 
         webView.setWebChromeClient(new WebChromeClient() {
             @Override
-            public boolean onShowFileChooser(WebView webView, ValueCallback<Uri[]> filePathCallback, FileChooserParams fileChooserParams) {
+            public boolean onShowFileChooser(WebView wv, ValueCallback<Uri[]> filePathCallback, FileChooserParams fileChooserParams) {
                 if (uploadMessage != null) {
                     uploadMessage.onReceiveValue(null);
                     uploadMessage = null;
                 }
                 uploadMessage = filePathCallback;
-
                 Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
                 intent.addCategory(Intent.CATEGORY_OPENABLE);
                 intent.setType("*/*");
-                intent.putExtra(Intent.EXTRA_MIME_TYPES, new String[] { "image/*", "video/*" });
+                intent.putExtra(Intent.EXTRA_MIME_TYPES, new String[]{"image/*", "video/*"});
                 try {
                     startActivityForResult(Intent.createChooser(intent, "Select Media"), FILECHOOSER_RESULTCODE);
                 } catch (Exception e) {
@@ -190,7 +235,13 @@ public class MainActivity extends Activity {
             }
         });
 
-        // Load Erasify Vercel production deployment
+        // Hide system UI for immersive experience
+        webView.setSystemUiVisibility(
+            View.SYSTEM_UI_FLAG_LAYOUT_STABLE |
+            View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION |
+            View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+        );
+
         webView.loadUrl("https://erasify-nine.vercel.app");
     }
 
@@ -202,7 +253,7 @@ public class MainActivity extends Activity {
             if (resultCode == Activity.RESULT_OK && intent != null) {
                 String dataString = intent.getDataString();
                 if (dataString != null) {
-                    results = new Uri[]{ Uri.parse(dataString) };
+                    results = new Uri[]{Uri.parse(dataString)};
                 }
             }
             uploadMessage.onReceiveValue(results);
@@ -214,11 +265,31 @@ public class MainActivity extends Activity {
 
     @Override
     public boolean onKeyDown(int keyCode, KeyEvent event) {
-        if ((keyCode == KeyEvent.KEYCODE_BACK) && webView.canGoBack()) {
+        if (keyCode == KeyEvent.KEYCODE_BACK && webView.canGoBack()) {
             webView.goBack();
             return true;
         }
         return super.onKeyDown(keyCode, event);
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        webView.onResume();
+        CookieManager.getInstance().flush();
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        webView.onPause();
+        CookieManager.getInstance().flush();
+    }
+
+    @Override
+    protected void onDestroy() {
+        webView.destroy();
+        super.onDestroy();
     }
 }
 `;
@@ -239,8 +310,8 @@ public class MainActivity extends Activity {
   const rJava = join(BUILD_DIR, 'gen', 'io', 'erasify', 'app', 'R.java');
   const mainJava = join(BUILD_DIR, 'src', 'io', 'erasify', 'app', 'MainActivity.java');
   run(
-    `"${JAVAC}" -encoding UTF-8 -cp "${ANDROID_JAR}" -d "${join(BUILD_DIR, 'bin')}" "${rJava}" "${mainJava}"`,
-    'Compiling Java Classes'
+    `"${JAVAC}" -encoding UTF-8 -source 8 -target 8 -cp "${ANDROID_JAR}" -d "${join(BUILD_DIR, 'bin')}" "${rJava}" "${mainJava}"`,
+    'Compiling Java Classes (Java 8 target)'
   );
 
   // Step 4: Convert class files to Dalvik classes.dex with d8
