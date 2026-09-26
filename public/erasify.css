@@ -1492,6 +1492,47 @@ footer.app-footer {
   position: relative;
 }
 
+.compare-pane {
+  position: relative;
+  overflow: hidden;
+  background: #000;
+  min-height: 300px;
+}
+
+.compare-pane video {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+}
+
+.compare-pane .empty {
+  position: absolute !important;
+  inset: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  text-align: center !important;
+  padding: 24px 16px !important;
+  color: var(--text-muted) !important;
+  font-size: 14px !important;
+  background: rgba(4, 10, 7, 0.75) !important;
+  backdrop-filter: blur(6px) !important;
+  -webkit-backdrop-filter: blur(6px) !important;
+  z-index: 5 !important;
+  pointer-events: auto !important;
+  cursor: pointer !important;
+  box-sizing: border-box !important;
+}
+
+.compare-pane .empty[hidden],
+.empty[hidden] {
+  display: none !important;
+}
+
 .video-view-tabs {
   display: none;
   background: rgba(0, 0, 0, 0.6);
@@ -1500,7 +1541,7 @@ footer.app-footer {
   gap: 8px;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 980px) {
   .video-view-tabs {
     display: flex !important;
   }
@@ -1516,24 +1557,40 @@ footer.app-footer {
     display: none !important;
   }
   .compare-pane {
-    min-height: 200px !important;
+    min-height: 220px !important;
     border-left: none !important;
     border-top: 1px solid var(--border-glass) !important;
-    padding: 8px !important;
+    padding: 0 !important;
     width: 100% !important;
+    position: relative !important;
   }
   .compare-pane:first-child {
     border-top: none !important;
   }
   .compare-pane video {
-    max-height: 220px !important;
+    min-height: 220px !important;
+    max-height: 260px !important;
     width: 100% !important;
+    display: block !important;
   }
   .compare-pane .empty {
-    font-size: 12px !important;
-    padding: 14px 8px !important;
+    position: absolute !important;
+    inset: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-size: 13px !important;
+    padding: 20px 14px !important;
     text-align: center !important;
-    word-break: break-word !important;
+    white-space: normal !important;
+    box-sizing: border-box !important;
+    z-index: 5 !important;
+  }
+  .compare-pane .empty[hidden] {
+    display: none !important;
   }
 }
 
