@@ -54,8 +54,8 @@ async function buildApk() {
   const manifestContent = `<?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="io.erasify.app"
-    android:versionCode="2"
-    android:versionName="1.0.1">
+    android:versionCode="3"
+    android:versionName="1.0.2">
 
     <uses-sdk
         android:minSdkVersion="21"
@@ -202,7 +202,7 @@ public class MainActivity extends Activity {
                     view.loadUrl(url);
                     return true;
                 }
-                // Open external links in browser
+                // Open external links in external browser
                 try {
                     Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
                     startActivity(intent);
@@ -210,6 +210,24 @@ public class MainActivity extends Activity {
                     view.loadUrl(url);
                 }
                 return true;
+            }
+
+            @Override
+            public void onPageFinished(WebView view, String url) {
+                super.onPageFinished(view, url);
+                // Inject CSS to hide website header & footer on tool pages
+                String injectCss =
+                    "(function(){" +
+                    "  if(document.getElementById('__app_css__')) return;" +
+                    "  var s=document.createElement('style');" +
+                    "  s.id='__app_css__';" +
+                    "  s.textContent=" +
+                    "    'header.app-header,nav.header-nav,.navbar,.mobile-menu-btn,#mobileMenu{display:none!important}' +" +
+                    "    'footer,.app-footer,.mobile-bottom-dock{display:none!important}' +" +
+                    "    'body{padding-top:0!important;padding-bottom:0!important}';" +
+                    "  document.head.appendChild(s);" +
+                    "})();";
+                view.evaluateJavascript(injectCss, null);
             }
         });
 
@@ -242,7 +260,7 @@ public class MainActivity extends Activity {
             View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
         );
 
-        webView.loadUrl("https://erasify-nine.vercel.app");
+        webView.loadUrl("https://erasify-nine.vercel.app/app.html");
     }
 
     @Override
