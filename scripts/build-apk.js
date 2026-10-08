@@ -416,7 +416,7 @@ public class MainActivity extends Activity {
   const alignedApk = join(BUILD_DIR, 'aligned.apk');
   run(`"${ZIPALIGN}" -f -p 4 "${unalignedApk}" "${alignedApk}"`, 'Zipalign');
 
-  const keystorePath = join(BUILD_DIR, 'erasify.keystore');
+  const keystorePath = join(ROOT_DIR, 'erasify.keystore');
   if (!existsSync(keystorePath)) {
     run(
       `"${KEYTOOL}" -genkeypair -v -keystore "${keystorePath}" -alias erasify -keyalg RSA -keysize 2048 -validity 10000 -storepass erasify123 -keypass erasify123 -dname "CN=Erasify, OU=Avdar, O=Avdar Innovations, L=Mumbai, ST=Maharashtra, C=IN"`,
@@ -467,8 +467,8 @@ public class MainActivity extends Activity {
   mkdirSync(protoDir, { recursive: true });
   console.log('\n▶ [AAB: Extracting proto APK]');
   execSync(
-    `powershell -noprofile -command "Expand-Archive -Path '${protoApk}' -DestinationPath '${protoDir}' -Force"`,
-    { stdio: 'inherit', cwd: ROOT_DIR }
+    `"${JAR_TOOL}" xf "${protoApk}"`,
+    { stdio: 'inherit', cwd: protoDir, env: ENV }
   );
 
   // AAB-C: Build bundletool base module directory structure
@@ -494,7 +494,7 @@ public class MainActivity extends Activity {
   // AAB-D: Create base.zip module archive
   const baseZip = join(BUILD_DIR, 'base.zip');
   if (existsSync(baseZip)) rmSync(baseZip);
-  run(`"${JAR_TOOL}" cf "${baseZip}" -C "${baseModDir}" .`, 'AAB: Creating base module ZIP');
+  run(`"${JAR_TOOL}" cMf "${baseZip}" -C "${baseModDir}" .`, 'AAB: Creating base module ZIP');
 
   // AAB-E: Build AAB with bundletool
   const aabPath = join(ROOT_DIR, 'Erasify.aab');
