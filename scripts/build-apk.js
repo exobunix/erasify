@@ -160,12 +160,9 @@ async function buildApk() {
 import android.app.Activity;
 import android.content.Intent;
 import android.graphics.Color;
-import android.graphics.Typeface;
 import android.net.Uri;
 import android.os.Bundle;
-import android.view.Gravity;
 import android.view.KeyEvent;
-import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
 import android.webkit.CookieManager;
@@ -174,26 +171,13 @@ import android.webkit.WebChromeClient;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
-import android.widget.LinearLayout;
-import android.widget.TextView;
 
 public class MainActivity extends Activity {
     private WebView webView;
     private ValueCallback<Uri[]> uploadMessage;
     private static final int FILECHOOSER_RESULTCODE = 1;
-    private LinearLayout[] tabViews;
 
-    private static final String[] TAB_URLS = {
-        "https://erasify-nine.vercel.app/app.html",
-        "https://erasify-nine.vercel.app/image-remover.html",
-        "https://erasify-nine.vercel.app/video-remover.html",
-        "https://erasify-nine.vercel.app/profile.html"
-    };
-    private static final String[] TAB_KEYS  = { "app.html", "image-remover", "video-remover", "profile" };
-    private static final String[] TAB_ICONS  = { "\\uD83C\\uDFE0", "\\uD83D\\uDDBC", "\\uD83C\\uDFAC", "\\uD83D\\uDC64" };
-    private static final String[] TAB_LABELS = { "Home", "Image", "Video", "Profile" };
-    private static final String C_ACTIVE   = "#10b981";
-    private static final String C_INACTIVE = "#6b7280";
+    private static final String START_URL = "https://erasify-nine.vercel.app/index.html";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -201,53 +185,9 @@ public class MainActivity extends Activity {
         requestWindowFeature(Window.FEATURE_NO_TITLE);
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
 
-        LinearLayout root = new LinearLayout(this);
-        root.setOrientation(LinearLayout.VERTICAL);
-        root.setBackgroundColor(Color.parseColor("#040806"));
-
         webView = new WebView(this);
-        root.addView(webView, new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, 0, 1f));
-
-        tabViews = new LinearLayout[TAB_LABELS.length];
-        LinearLayout bottomNav = new LinearLayout(this);
-        bottomNav.setOrientation(LinearLayout.HORIZONTAL);
-        bottomNav.setBackgroundColor(Color.parseColor("#06100a"));
-        bottomNav.setPadding(0, dp(1), 0, 0);
-        root.addView(bottomNav, new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, dp(68)));
-
-        for (int i = 0; i < TAB_LABELS.length; i++) {
-            final int idx = i;
-            LinearLayout tab = new LinearLayout(this);
-            tab.setOrientation(LinearLayout.VERTICAL);
-            tab.setGravity(Gravity.CENTER);
-            tab.setLayoutParams(new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.MATCH_PARENT, 1f));
-            tab.setClickable(true);
-            tab.setFocusable(true);
-
-            TextView icon = new TextView(this);
-            icon.setText(TAB_ICONS[i]);
-            icon.setTextSize(22);
-            icon.setGravity(Gravity.CENTER);
-            icon.setTextColor(i == 0 ? Color.parseColor(C_ACTIVE) : Color.parseColor(C_INACTIVE));
-
-            TextView lbl = new TextView(this);
-            lbl.setText(TAB_LABELS[i]);
-            lbl.setTextSize(10);
-            lbl.setTypeface(null, Typeface.BOLD);
-            lbl.setGravity(Gravity.CENTER);
-            lbl.setTextColor(i == 0 ? Color.parseColor(C_ACTIVE) : Color.parseColor(C_INACTIVE));
-            lbl.setPadding(0, dp(2), 0, 0);
-
-            tab.addView(icon);
-            tab.addView(lbl);
-            tab.setOnClickListener(new View.OnClickListener() {
-                @Override public void onClick(View v) { navigateTo(idx); }
-            });
-            tabViews[i] = tab;
-            bottomNav.addView(tab);
-        }
-
-        setContentView(root);
+        webView.setBackgroundColor(Color.parseColor("#040806"));
+        setContentView(webView);
 
         WebSettings ws = webView.getSettings();
         ws.setJavaScriptEnabled(true);
@@ -278,39 +218,13 @@ public class MainActivity extends Activity {
                     try { startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(url))); return true; }
                     catch (Exception e) { return false; }
                 }
-                if (url.contains("erasify") || url.contains("vercel.app")) { view.loadUrl(url); return true; }
+                if (url.contains("erasify") || url.contains("vercel.app") || url.startsWith("http://127.0.0.1") || url.startsWith("http://localhost")) {
+                    view.loadUrl(url);
+                    return true;
+                }
                 try { startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(url))); }
                 catch (Exception e) { view.loadUrl(url); }
                 return true;
-            }
-
-            @Override
-            public void onPageFinished(WebView view, String url) {
-                super.onPageFinished(view, url);
-                String css =
-                    "header.app-header,nav.header-nav,.navbar,.app-header," +
-                    ".mobile-menu-btn,#mobileMenu,.header-actions{display:none!important}" +
-                    "nav.bottom-app-bar,.bottom-app-bar,.bottom-tab{display:none!important}" +
-                    ".mobile-drawer,.mobile-backdrop,.mobile-nav,.mobile-overlay{display:none!important}" +
-                    "footer,.app-footer,.mobile-bottom-dock,.bottom-dock{display:none!important}" +
-                    "body{padding-top:0!important;padding-bottom:0!important;margin-top:0!important}" +
-                    ".hero{padding-top:20px!important}" +
-                    ".hero-section,.page-hero,.hero.container{padding-top:20px!important}" +
-                    "main.flex-grow{padding-bottom:4px!important}";
-                view.evaluateJavascript(
-                    "(function(){var s=document.getElementById('__gx__');" +
-                    "if(!s){s=document.createElement('style');s.id='__gx__';document.head.appendChild(s);}" +
-                    "s.textContent='" + css + "';})()", null
-                );
-                if (url != null) {
-                    for (int i = 0; i < TAB_KEYS.length; i++) {
-                        final boolean active = url.contains(TAB_KEYS[i]);
-                        final int fi = i;
-                        runOnUiThread(new Runnable() {
-                            @Override public void run() { setTabActive(fi, active); }
-                        });
-                    }
-                }
             }
         });
 
@@ -330,22 +244,17 @@ public class MainActivity extends Activity {
             }
         });
 
-        webView.loadUrl(TAB_URLS[0]);
+        webView.loadUrl(START_URL);
     }
 
-    private void navigateTo(int idx) {
-        for (int i = 0; i < tabViews.length; i++) setTabActive(i, i == idx);
-        webView.loadUrl(TAB_URLS[idx]);
+    @Override
+    public boolean onKeyDown(int keyCode, KeyEvent event) {
+        if (keyCode == KeyEvent.KEYCODE_BACK && webView.canGoBack()) {
+            webView.goBack();
+            return true;
+        }
+        return super.onKeyDown(keyCode, event);
     }
-
-    private void setTabActive(int idx, boolean active) {
-        if (tabViews == null || idx >= tabViews.length || tabViews[idx] == null) return;
-        int color = active ? Color.parseColor(C_ACTIVE) : Color.parseColor(C_INACTIVE);
-        ((TextView) tabViews[idx].getChildAt(0)).setTextColor(color);
-        ((TextView) tabViews[idx].getChildAt(1)).setTextColor(color);
-    }
-
-    private int dp(int v) { return (int)(v * getResources().getDisplayMetrics().density); }
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent intent) {
@@ -358,13 +267,9 @@ public class MainActivity extends Activity {
             }
             uploadMessage.onReceiveValue(results);
             uploadMessage = null;
-        } else super.onActivityResult(requestCode, resultCode, intent);
-    }
-
-    @Override
-    public boolean onKeyDown(int keyCode, KeyEvent event) {
-        if (keyCode == KeyEvent.KEYCODE_BACK && webView.canGoBack()) { webView.goBack(); return true; }
-        return super.onKeyDown(keyCode, event);
+        } else {
+            super.onActivityResult(requestCode, resultCode, intent);
+        }
     }
 
     @Override protected void onResume()  { super.onResume();  webView.onResume();  CookieManager.getInstance().flush(); }

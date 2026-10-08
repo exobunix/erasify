@@ -224,10 +224,10 @@
       <span>Video</span>
     </a>
     <a href="./pricing.html" class="bottom-tab">
-      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" stroke-width="2"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 14.5l1.5-4 2.5 2 2.5-2 1.5 4H8z"/></svg>
       <span>Plans</span>
     </a>
-    <a href="#" onclick="if(window.currentUser){window.location.href='./profile.html';}else{openSignIn();}return false;" class="bottom-tab bottom-tab-profile">
+    <a href="./profile.html" class="bottom-tab bottom-tab-profile">
       <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
       <span>Account</span>
     </a>
@@ -235,29 +235,115 @@
 
   <!-- Video Remover Workspace -->
   <main class="flex-grow pb-12">
-    <section class="hero container animate-fade-in" style="padding-top: 40px; padding-bottom: 24px;">
-      <span class="badge">Local Video Clean-up</span>
-      <h1 class="hero-title" style="font-size: clamp(24px, 4.2vw, 44px); margin-bottom: 12px;">Erase Video Watermarks</h1>
-      <p class="hero-subtitle" style="font-size: 14px; max-width: 620px; margin-bottom: 20px;">
-        WebCodecs + Mediabunny acceleration. Videos are decoded, de-blended, and encoded entirely inside your local browser sandbox.
+    <!-- Desktop Hero Section -->
+    <div class="desktop-only">
+      <section class="hero container animate-fade-in" style="padding-top: 40px; padding-bottom: 24px;">
+        <span class="badge">Local Video Clean-up</span>
+        <h1 class="hero-title" style="font-size: clamp(24px, 4.2vw, 44px); margin-bottom: 12px;">Erase Video Watermarks</h1>
+        <p class="hero-subtitle" style="font-size: 14px; max-width: 620px; margin-bottom: 20px;">
+          WebCodecs + Mediabunny acceleration. Videos are decoded, de-blended, and encoded entirely inside your local browser sandbox.
+        </p>
+      </section>
+    </div>
+
+    <!-- Mobile UI Screen (Screenshot 2) -->
+    <div class="mobile-only container" id="mobileVideoShowcase" style="padding-top: 24px; padding-bottom: 20px; text-align: center;">
+      <span class="pill-tag-neon">AI VIDEO CLEAN-UP</span>
+      <h1 class="hero-title mobile-screen-title" style="margin-bottom: 12px;">
+        Remove Video<br><span style="color: #00f59b;">Watermarks Easily</span>
+      </h1>
+      <p class="hero-subtitle mobile-screen-subtitle">
+        Upload your video and let our advanced AI remove watermarks, logos, text and unwanted objects in seconds.
       </p>
-    </section>
+
+      <!-- Split Video Before/After Showcase Card -->
+      <div class="mobile-showcase-card" onclick="document.getElementById('fileInput').click()">
+        <div class="mobile-showcase-split">
+          <div class="mobile-split-half left-half">
+            <img src="demo-video-car.jpg" alt="Watermarked Video Frame">
+            <div class="watermark-overlay-layer"></div>
+            <span class="badge-before">Before</span>
+          </div>
+          <div class="mobile-split-divider"></div>
+          <div class="mobile-split-center-btn">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="#040806" stroke="#040806" stroke-width="2">
+              <polygon points="6 4 20 12 6 20 6 4"></polygon>
+            </svg>
+          </div>
+          <div class="mobile-split-half right-half">
+            <img src="demo-video-car.jpg" alt="Clean Video Frame">
+            <span class="badge-after">After</span>
+          </div>
+        </div>
+        <!-- Video Player Bar (Screenshot 2) -->
+        <div class="mobile-video-bar">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="#ffffff" stroke="none"><polygon points="6 4 20 12 6 20 6 4"></polygon></svg>
+          <span>00:00 / 00:15</span>
+          <div class="mobile-video-progress">
+            <div class="mobile-video-progress-fill"></div>
+          </div>
+          <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" stroke-width="2"></polygon><path d="M15.54 8.46a5 5 0 0 1 0 7.07" stroke-width="2"></path></svg>
+          <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3" stroke-width="2"></path></svg>
+        </div>
+      </div>
+
+      <!-- 4 Circular Feature Badges -->
+      <div class="mobile-features-strip">
+        <div class="mobile-feature-item">
+          <div class="mobile-feature-icon-circle">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+          </div>
+          <div class="mobile-feature-title">AI Powered</div>
+          <div class="mobile-feature-desc">Automatic watermark removal</div>
+        </div>
+        <div class="mobile-feature-item">
+          <div class="mobile-feature-icon-circle">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+          </div>
+          <div class="mobile-feature-title">High Quality</div>
+          <div class="mobile-feature-desc">Preserves original video quality</div>
+        </div>
+        <div class="mobile-feature-item">
+          <div class="mobile-feature-icon-circle">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><polygon points="6 4 20 12 6 20 6 4" stroke-width="2"/></svg>
+          </div>
+          <div class="mobile-feature-title">Multiple Formats</div>
+          <div class="mobile-feature-desc">Supports MP4, WebM, MOV and more</div>
+        </div>
+        <div class="mobile-feature-item">
+          <div class="mobile-feature-icon-circle">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+          </div>
+          <div class="mobile-feature-title">100% Private</div>
+          <div class="mobile-feature-desc">Your files stay secure in your browser</div>
+        </div>
+      </div>
+
+      <!-- Big Bright Neon Upload Button -->
+      <button class="btn-upload-neon" onclick="document.getElementById('fileInput').click()">
+        <svg width="22" height="22" fill="none" stroke="#040806" stroke-width="2.5" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path>
+        </svg>
+        Upload Video
+      </button>
+      <div class="upload-subtext">Supports MP4, WebM, QuickTime • 10s – 30s clips • Up to 100MB</div>
+    </div>
 
     <section class="container">
       <!-- Responsive Workbench Grid -->
       <div class="workbench-grid">
         
         <!-- Dropzone Section: Ordered First on Mobile -->
-        <div class="mobile-order-first" style="width: 100%;">
+        <div class="mobile-order-first desktop-only" style="width: 100%;">
           <div id="dropzone" class="glass-card" style="padding: 24px 18px; text-align: center; cursor: pointer; border: 2px dashed rgba(16,185,129,0.3); border-radius: 16px;">
             <div class="card-icon" style="margin: 0 auto 12px; width: 44px; height: 44px; border-radius: 12px;">
               <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg>
             </div>
             <strong style="display: block; font-size: 15px; color: #fff;">Select or Drop Video File</strong>
             <span class="footer-text" style="font-size: 12px; margin-top: 6px; display: block;">Supports MP4, WebM, QuickTime. 10s-30s clips process fastest.</span>
-            <input id="fileInput" type="file" accept="image/jpeg,image/png,image/webp,video/mp4,video/webm,video/quicktime,video/*" hidden style="display: none;">
           </div>
         </div>
+        <input id="fileInput" type="file" accept="image/jpeg,image/png,image/webp,video/mp4,video/webm,video/quicktime,video/*" hidden style="display: none;">
 
         <!-- Left/Main Panel: Compare Screen & Metadata -->
         <div style="display: flex; flex-direction: column; gap: 20px; width: 100%;">
