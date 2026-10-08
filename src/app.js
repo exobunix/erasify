@@ -220,10 +220,12 @@ function handleFileSelect(e) {
 }
 
 async function handleFiles(files) {
-    const isAllowed = await window.checkAuthAndQuota('image');
-    if (!isAllowed) {
-        fileInput.value = '';
-        return;
+    if (typeof window.checkAuthAndQuota === 'function') {
+        const isAllowed = await window.checkAuthAndQuota('image');
+        if (!isAllowed) {
+            fileInput.value = '';
+            return;
+        }
     }
 
     setStatusMessage('');

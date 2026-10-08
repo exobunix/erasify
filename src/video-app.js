@@ -530,8 +530,10 @@ function getDebugAlphaOptions() {
 
 async function runDetection() {
     if (!state.file || state.running) return;
-    const isAllowed = await window.checkAuthAndQuota('video');
-    if (!isAllowed) return;
+    if (typeof window.checkAuthAndQuota === 'function') {
+        const isAllowed = await window.checkAuthAndQuota('video');
+        if (!isAllowed) return;
+    }
 
     const jobId = ++state.jobId;
     state.running = true;
@@ -579,8 +581,10 @@ async function runDetection() {
 
 async function runExport() {
     if (!state.file || state.running) return;
-    const isAllowed = await window.checkAuthAndQuota('video');
-    if (!isAllowed) return;
+    if (typeof window.checkAuthAndQuota === 'function') {
+        const isAllowed = await window.checkAuthAndQuota('video');
+        if (!isAllowed) return;
+    }
 
     const quotaOk = await consumeQuotaCredit('video');
     if (!quotaOk) return;

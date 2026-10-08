@@ -516,14 +516,17 @@ function scoreCandidateOnFrame(imageData, candidate, alphaMapOptions = {}) {
     };
     const spatial = computeRegionSpatialCorrelation({ imageData, alphaMap, region });
     const gradient = computeRegionGradientCorrelation({ imageData, alphaMap, region });
-    const confidence = Math.max(0, spatial) * 0.35 + Math.max(0, gradient) * 0.65;
+    const posConfidence = Math.max(0, spatial) * 0.35 + Math.max(0, gradient) * 0.65;
+    const negConfidence = Math.max(0, -spatial) * 0.35 + Math.max(0, gradient) * 0.65;
+    const confidence = Math.max(posConfidence, negConfidence);
 
     return {
         candidate,
         alphaMap,
         spatial,
         gradient,
-        confidence
+        confidence,
+        polarity: spatial < -0.05 && negConfidence > posConfidence ? 'negative' : 'positive'
     };
 }
 
@@ -541,10 +544,13 @@ export function scoreVideoWatermarkFrame(imageData, position, alphaMap) {
                 height
             }
         });
+        const posConfidence = Math.max(0, spatial);
+        const negConfidence = Math.max(0, -spatial);
         return {
             spatial,
             gradient: 0,
-            confidence: Math.max(0, spatial)
+            confidence: Math.max(posConfidence, negConfidence),
+            polarity: spatial < -0.05 ? 'negative' : 'positive'
         };
     }
 
@@ -555,12 +561,15 @@ export function scoreVideoWatermarkFrame(imageData, position, alphaMap) {
     };
     const spatial = computeRegionSpatialCorrelation({ imageData, alphaMap, region });
     const gradient = computeRegionGradientCorrelation({ imageData, alphaMap, region });
-    const confidence = Math.max(0, spatial) * 0.35 + Math.max(0, gradient) * 0.65;
+    const posConfidence = Math.max(0, spatial) * 0.35 + Math.max(0, gradient) * 0.65;
+    const negConfidence = Math.max(0, -spatial) * 0.35 + Math.max(0, gradient) * 0.65;
+    const confidence = Math.max(posConfidence, negConfidence);
 
     return {
         spatial,
         gradient,
-        confidence
+        confidence,
+        polarity: spatial < -0.05 && negConfidence > posConfidence ? 'negative' : 'positive'
     };
 }
 
@@ -1072,6 +1081,38 @@ function summarizeCandidate(scores) {
     };
 }
 
+function compareVideoCandidateSummaries(a, b, frameCount) {
+    const aDecisive = frameCount > 0 && a.votes / frameCount >= 0.6;
+    const bDecisive = frameCount > 0 && b.votes / frameCount >= 0.6;
+    if (aDecisive !== bDecisive) return bDecisive ? 1 : -1;
+    if (aDecisive && bDecisive) {
+        if (b.votes !== a.votes) return b.votes - a.votes;
+        return b.meanConfidence - a.meanConfidence;
+    }
+
+    const aPeak = a.maxConfidence ?? 0;
+    const bPeak = b.maxConfidence ?? 0;
+    if ((aPeak >= 0.40 || bPeak >= 0.40) && Math.abs(aPeak - bPeak) >= 0.20) {
+        return bPeak - aPeak;
+    }
+
+    if (Math.abs(b.meanConfidence - a.meanConfidence) >= 0.05) {
+        return b.meanConfidence - a.meanConfidence;
+    }
+
+    if (b.votes !== a.votes) {
+        return b.votes - a.votes;
+    }
+
+    if (Math.abs(bPeak - aPeak) >= 0.02) {
+        return bPeak - aPeak;
+    }
+
+    const aPriority = a.candidate?.sourcePriority ?? 100;
+    const bPriority = b.candidate?.sourcePriority ?? 100;
+    return aPriority - bPriority;
+}
+
 export function detectDiamondVideoWatermarkFromFrames({
     frames,
     width,
@@ -1099,7 +1140,7 @@ export function detectDiamondVideoWatermarkFromFrames({
             .sort((a, b) => b.confidence - a.confidence);
 
         const winner = scored[0] || null;
-        if (winner) {
+        if (winner && winner.confidence >= 0.035) {
             frameWinners.push({
                 timestamp: frame.timestamp,
                 candidateId: winner.candidate.id,
@@ -1123,16 +1164,13 @@ export function detectDiamondVideoWatermarkFromFrames({
             ...summarizeCandidate(entry.scores),
             votes: entry.votes || 0
         }))
-        .sort((a, b) => {
-            if (b.votes !== a.votes) return b.votes - a.votes;
-            return b.meanConfidence - a.meanConfidence;
-        });
+        .sort((a, b) => compareVideoCandidateSummaries(a, b, frames.length));
 
     const best = summaries[0];
     const voteRatio = frames.length > 0 ? best.votes / frames.length : 0;
     const isConfident =
-        best.meanConfidence >= minConfidence &&
-        voteRatio >= 0.6;
+        (best.meanConfidence >= minConfidence && voteRatio >= 0.6) ||
+        (best.maxConfidence >= 0.45 && best.meanConfidence >= 0.12);
     const position = {
         x: best.candidate.x,
         y: best.candidate.y,
@@ -1222,7 +1260,7 @@ export async function detectDiamondVideoWatermarkFromFramesAsync({
             .sort((a, b) => b.confidence - a.confidence);
 
         const winner = scored[0] || null;
-        if (winner) {
+        if (winner && winner.confidence >= 0.035) {
             frameWinners.push({
                 timestamp: frame.timestamp,
                 candidateId: winner.candidate.id,
@@ -1247,16 +1285,13 @@ export async function detectDiamondVideoWatermarkFromFramesAsync({
             ...summarizeCandidate(entry.scores),
             votes: entry.votes || 0
         }))
-        .sort((a, b) => {
-            if (b.votes !== a.votes) return b.votes - a.votes;
-            return b.meanConfidence - a.meanConfidence;
-        });
+        .sort((a, b) => compareVideoCandidateSummaries(a, b, frames.length));
 
     const best = summaries[0];
     const voteRatio = frames.length > 0 ? best.votes / frames.length : 0;
     const isConfident =
-        best.meanConfidence >= minConfidence &&
-        voteRatio >= 0.6;
+        (best.meanConfidence >= minConfidence && voteRatio >= 0.6) ||
+        (best.maxConfidence >= 0.45 && best.meanConfidence >= 0.12);
     const position = {
         x: best.candidate.x,
         y: best.candidate.y,

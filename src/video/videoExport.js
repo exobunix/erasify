@@ -452,14 +452,14 @@ function smoothstep(edge0, edge1, value) {
     return t * t * (3 - 2 * t);
 }
 
-function applyRoiRemoval(originalRoi, alphaMap, gain) {
+function applyRoiRemoval(originalRoi, alphaMap, gain, logoValue = 255) {
     const candidate = cloneImageData(originalRoi);
     removeWatermark(candidate, alphaMap, {
         x: 0,
         y: 0,
         width: originalRoi.width,
         height: originalRoi.height
-    }, { alphaGain: gain });
+    }, { alphaGain: gain, logoValue });
     return candidate;
 }
 
@@ -696,7 +696,8 @@ function refineAlphaGain({
     position,
     alphaMap,
     seedGain,
-    previousGain
+    previousGain,
+    logoValue = 255
 }) {
     const background = computeBackgroundStats(ctx, position, alphaMap);
     if (!Number.isFinite(background.mean)) {
@@ -710,7 +711,7 @@ function refineAlphaGain({
 
     for (let i = 0; i < ALPHA_REFINEMENT_ROUNDS; i++) {
         const gain = (lo + hi) / 2;
-        const restored = applyRoiRemoval(originalRoi, alphaMap, gain);
+        const restored = applyRoiRemoval(originalRoi, alphaMap, gain, logoValue);
         const delta = scoreRestoredRoiAgainstBackground(restored, alphaMap, background.mean);
         const absDelta = Math.abs(delta);
 
@@ -743,7 +744,10 @@ function processWatermarkRoi(ctx, detection, options) {
         { x: 0, y: 0, width: position.width, height: position.height },
         alphaMap
     );
-    const shouldSkip = frameScore.confidence < options.lowConfidenceThreshold;
+    const minThreshold = detection.isConfident
+        ? Math.min(0.015, options.lowConfidenceThreshold)
+        : options.lowConfidenceThreshold;
+    const shouldSkip = frameScore.confidence < minThreshold;
 
     if (shouldSkip) {
         return {
@@ -755,6 +759,7 @@ function processWatermarkRoi(ctx, detection, options) {
     }
 
     const roi = ctx.getImageData(position.x, position.y, position.width, position.height);
+    const logoValue = frameScore.polarity === 'negative' ? 0 : 255;
     const useAdaptiveAlpha = options.adaptiveAlpha && frameScore.confidence >= options.highConfidenceThreshold;
     const alphaGain = useAdaptiveAlpha
         ? refineAlphaGain({
@@ -763,10 +768,11 @@ function processWatermarkRoi(ctx, detection, options) {
             position,
             alphaMap,
             seedGain: options.seedAlphaGain,
-            previousGain: options.previousAlphaGain
+            previousGain: options.previousAlphaGain,
+            logoValue
         })
         : options.seedAlphaGain;
-    const processed = applyRoiRemoval(roi, alphaMap, alphaGain);
+    const processed = applyRoiRemoval(roi, alphaMap, alphaGain, logoValue);
     ctx.putImageData(processed, position.x, position.y);
     applyVideoResidualCleanup(ctx, position, alphaMap, {
         residualCleanupStrength: options.residualCleanupStrength,
@@ -818,7 +824,10 @@ async function processWatermarkRoiAsync(ctx, detection, options) {
         { x: 0, y: 0, width: position.width, height: position.height },
         alphaMap
     );
-    const shouldSkip = frameScore.confidence < options.lowConfidenceThreshold;
+    const minThreshold = detection.isConfident
+        ? Math.min(0.015, options.lowConfidenceThreshold)
+        : options.lowConfidenceThreshold;
+    const shouldSkip = frameScore.confidence < minThreshold;
 
     if (shouldSkip) {
         return {
@@ -830,6 +839,7 @@ async function processWatermarkRoiAsync(ctx, detection, options) {
     }
 
     const roi = ctx.getImageData(position.x, position.y, position.width, position.height);
+    const logoValue = frameScore.polarity === 'negative' ? 0 : 255;
     const useAdaptiveAlpha = options.adaptiveAlpha && frameScore.confidence >= options.highConfidenceThreshold;
     const alphaGain = useAdaptiveAlpha
         ? refineAlphaGain({
@@ -838,10 +848,11 @@ async function processWatermarkRoiAsync(ctx, detection, options) {
             position,
             alphaMap,
             seedGain: options.seedAlphaGain,
-            previousGain: options.previousAlphaGain
+            previousGain: options.previousAlphaGain,
+            logoValue
         })
         : options.seedAlphaGain;
-    const processed = applyRoiRemoval(roi, alphaMap, alphaGain);
+    const processed = applyRoiRemoval(roi, alphaMap, alphaGain, logoValue);
     ctx.putImageData(processed, position.x, position.y);
     const cleanupResult = await applyVideoResidualCleanupAsync(ctx, position, alphaMap, {
         residualCleanupStrength: options.residualCleanupStrength,
