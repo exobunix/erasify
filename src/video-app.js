@@ -419,6 +419,9 @@ function renderDetection(detection) {
         : Number.isFinite(best.meanNcc)
             ? best.meanNcc
             : null;
+    const statusText = detection.isConfident
+        ? 'Exportable'
+        : (els.allowLowConfidence?.checked ? 'Low Confidence (Export Allowed)' : 'Low Confidence');
     els.detection.innerHTML = `
         <dl>
             <div><dt>Candidate</dt><dd>${bestLabel}</dd></div>
@@ -426,7 +429,7 @@ function renderDetection(detection) {
             <div><dt>Size</dt><dd>${detection.position.width} x ${detection.position.height}</dd></div>
             <div><dt>Mean Score</dt><dd>${Number.isFinite(bestScore) ? bestScore.toFixed(3) : '-'}</dd></div>
             <div><dt>Votes</dt><dd>${best.votes || 0}/${detection.summary?.frameCount || 0}</dd></div>
-            <div><dt>Status</dt><dd>${detection.isConfident ? 'Exportable' : 'Low Confidence'}</dd></div>
+            <div><dt>Status</dt><dd>${statusText}</dd></div>
         </dl>
     `;
 }
@@ -455,6 +458,9 @@ async function setFile(file) {
     state.detection = null;
     state.processedUrl = null;
     state.jobId++;
+    if (els.allowLowConfidence) {
+        els.allowLowConfidence.checked = false;
+    }
 
     state.originalUrl = URL.createObjectURL(file);
     els.originalVideo.src = state.originalUrl;
@@ -545,13 +551,21 @@ async function runDetection() {
         state.metadata = result.metadata;
         state.detection = result.detection;
         renderMetadata(result.metadata);
-        renderDetection(result.detection);
         setProgress(1, result.detection.isConfident ? 'Detection complete' : 'Low confidence');
         const preset = applyAutomaticPreset(result.detection, result.metadata, { silent: true });
-        if (preset.id === 'relocated-review') {
-            setStatus('Detection complete. Local AI model will be used during export.', result.detection.isConfident ? 'success' : 'warn');
+        if (!result.detection.isConfident) {
+            if (els.allowLowConfidence) {
+                els.allowLowConfidence.checked = true;
+            }
+            renderDetection(result.detection);
+            setStatus('Low detection confidence, but low-confidence export is enabled. You can now click "Auto Export Video".', 'warn');
         } else {
-            setStatus(result.detection.isConfident ? 'Detection complete. Local AI model will be used during export.' : 'Low detection confidence, but you can still attempt AI export.', result.detection.isConfident ? 'success' : 'warn');
+            renderDetection(result.detection);
+            if (preset.id === 'relocated-review') {
+                setStatus('Detection complete. Local AI model will be used during export.', 'success');
+            } else {
+                setStatus('Detection complete. Local AI model will be used during export.', 'success');
+            }
         }
     } catch (error) {
         console.error(error);
@@ -593,11 +607,21 @@ async function runExport() {
             state.metadata = detected.metadata;
             state.detection = detected.detection;
             renderMetadata(detected.metadata);
-            renderDetection(detected.detection);
             detectionPayload = { metadata: detected.metadata, detection: detected.detection };
             applyAutomaticPreset(detected.detection, detected.metadata, { silent: true });
+            if (!detected.detection.isConfident && els.allowLowConfidence) {
+                els.allowLowConfidence.checked = true;
+            }
+            renderDetection(detected.detection);
         } else {
+            const wasLowConfidenceChecked = Boolean(els.allowLowConfidence?.checked);
             applyAutomaticPreset(detectionPayload.detection, detectionPayload.metadata, { silent: true });
+            if (wasLowConfidenceChecked || !detectionPayload.detection.isConfident) {
+                if (els.allowLowConfidence) {
+                    els.allowLowConfidence.checked = true;
+                }
+            }
+            renderDetection(detectionPayload.detection);
         }
         applyDebugControlOverrides();
         const denoiseBackend = els.denoiseBackend.value || DEFAULT_DENOISE_BACKEND;
@@ -625,7 +649,7 @@ async function runExport() {
             ...debugAlphaOptions,
             sampleCount: Number(els.sampleCount.value) || DEFAULT_SAMPLE_COUNT,
             detection: detectionPayload,
-            allowLowConfidence: els.allowLowConfidence.checked,
+            allowLowConfidence: Boolean(els.allowLowConfidence?.checked),
             allenkFdncnnRuntime,
             allenkFdncnnSigma,
             allenkFdncnnPadding,
@@ -674,7 +698,15 @@ async function runExport() {
         setStatus(`${cleanupNote}, processed ${result.processedFrames} frames. ${audioNote}`, 'success');
     } catch (error) {
         console.error(error);
-        setStatus(error.message || 'Export failed', 'error');
+        if (error.message && error.message.includes('low-confidence export')) {
+            if (els.allowLowConfidence) {
+                els.allowLowConfidence.checked = true;
+            }
+            if (state.detection) renderDetection(state.detection);
+            setStatus('Detection confidence is low. Low-confidence export has been enabled. Click "Auto Export Video" to export anyway.', 'warn');
+        } else {
+            setStatus(error.message || 'Export failed', 'error');
+        }
     } finally {
         state.running = false;
         updateButtons();
@@ -696,6 +728,9 @@ function reset() {
     els.downloadBtn.removeAttribute('href');
     els.downloadBtn.removeAttribute('download');
     els.originalEmpty.hidden = false;
+    if (els.allowLowConfidence) {
+        els.allowLowConfidence.checked = false;
+    }
     updateCompareMode();
     renderMetadata(null);
     renderDetection(null);
@@ -735,7 +770,9 @@ function applyPresetToControls(preset) {
     els.videoBitrateMbps.value = Number(preset.videoBitrateMbps) > 0
         ? String(preset.videoBitrateMbps)
         : '';
-    els.allowLowConfidence.checked = preset.allowLowConfidence === true;
+    if (preset.allowLowConfidence === true) {
+        els.allowLowConfidence.checked = true;
+    }
     renderAutoPresetSummary(preset);
 }
 
@@ -841,6 +878,11 @@ function setupEvents() {
     els.detectBtn.addEventListener('click', runDetection);
     els.processBtn.addEventListener('click', runExport);
     els.resetBtn.addEventListener('click', reset);
+    els.allowLowConfidence?.addEventListener('change', () => {
+        if (state.detection) {
+            renderDetection(state.detection);
+        }
+    });
     els.relocatedReviewPresetBtn.addEventListener('click', applyRelocatedReviewPreset);
     els.downloadBtn.addEventListener('click', (event) => {
         if (!state.processedUrl || state.running) event.preventDefault();

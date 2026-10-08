@@ -1,40 +1,56 @@
-import { existsSync, mkdirSync, writeFileSync, copyFileSync, rmSync, statSync, readdirSync } from 'node:fs';
+import { existsSync, mkdirSync, writeFileSync, copyFileSync, rmSync, statSync, readdirSync, createWriteStream } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { execSync } from 'node:child_process';
+import https from 'node:https';
 
 const ROOT_DIR = resolve('.');
 const BUILD_DIR = join(ROOT_DIR, 'android-build');
+const TOOLS_DIR = join(ROOT_DIR, '.build-tools');
 
 const JDK_BIN = 'C:\\Program Files\\Android\\Android Studio\\jbr\\bin';
-const JAVAC = join(JDK_BIN, 'javac.exe');
-const KEYTOOL = join(JDK_BIN, 'keytool.exe');
+const JAVAC    = join(JDK_BIN, 'javac.exe');
+const KEYTOOL  = join(JDK_BIN, 'keytool.exe');
 const JAR_TOOL = join(JDK_BIN, 'jar.exe');
+const JAVA_EXE = join(JDK_BIN, 'java.exe');
+const JARSIGNER = join(JDK_BIN, 'jarsigner.exe');
 
-const SDK_ROOT = 'C:\\Users\\Adarsh\\AppData\\Local\\Android\\Sdk';
+const SDK_ROOT    = 'C:\\Users\\Adarsh\\AppData\\Local\\Android\\Sdk';
 const BUILD_TOOLS = join(SDK_ROOT, 'build-tools', '35.0.0');
-const AAPT2 = join(BUILD_TOOLS, 'aapt2.exe');
-const D8 = join(BUILD_TOOLS, 'd8.bat');
-const ZIPALIGN = join(BUILD_TOOLS, 'zipalign.exe');
-const APKSIGNER = join(BUILD_TOOLS, 'apksigner.bat');
+const AAPT2       = join(BUILD_TOOLS, 'aapt2.exe');
+const D8          = join(BUILD_TOOLS, 'd8.bat');
+const ZIPALIGN    = join(BUILD_TOOLS, 'zipalign.exe');
+const APKSIGNER   = join(BUILD_TOOLS, 'apksigner.bat');
 const ANDROID_JAR = join(SDK_ROOT, 'platforms', 'android-34', 'android.jar');
+
+const BUNDLETOOL_VERSION = '1.15.6';
+const BUNDLETOOL_JAR = join(TOOLS_DIR, `bundletool-all-${BUNDLETOOL_VERSION}.jar`);
+
+const ENV = {
+  ...process.env,
+  JAVA_HOME: 'C:\\Program Files\\Android\\Android Studio\\jbr',
+  PATH: `${JDK_BIN};${process.env.PATH}`
+};
 
 function run(cmd, desc) {
   console.log(`\n▶ [${desc}]`);
   console.log(`$ ${cmd}`);
-  const env = {
-    ...process.env,
-    JAVA_HOME: 'C:\\Program Files\\Android\\Android Studio\\jbr',
-    PATH: `${JDK_BIN};${process.env.PATH}`
-  };
-  execSync(cmd, { stdio: 'inherit', cwd: ROOT_DIR, env });
+  execSync(cmd, { stdio: 'inherit', cwd: ROOT_DIR, env: ENV });
 }
 
-// Recursively find all .class files in a directory
+function copyDirSync(src, dst) {
+  mkdirSync(dst, { recursive: true });
+  for (const item of readdirSync(src, { withFileTypes: true })) {
+    const s = join(src, item.name);
+    const d = join(dst, item.name);
+    if (item.isDirectory()) copyDirSync(s, d);
+    else copyFileSync(s, d);
+  }
+}
+
 function findClassFiles(dir) {
   const results = [];
   if (!existsSync(dir)) return results;
-  const items = readdirSync(dir, { withFileTypes: true });
-  for (const item of items) {
+  for (const item of readdirSync(dir, { withFileTypes: true })) {
     const full = join(dir, item.name);
     if (item.isDirectory()) results.push(...findClassFiles(full));
     else if (item.name.endsWith('.class')) results.push(full);
@@ -42,27 +58,49 @@ function findClassFiles(dir) {
   return results;
 }
 
+function downloadFile(url, dest) {
+  return new Promise((resolve, reject) => {
+    const file = createWriteStream(dest);
+    const doGet = (u) => {
+      https.get(u, { headers: { 'User-Agent': 'node.js' } }, (res) => {
+        if (res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
+          doGet(res.headers.location);
+          return;
+        }
+        if (res.statusCode !== 200) {
+          file.close();
+          rmSync(dest, { force: true });
+          reject(new Error(`HTTP ${res.statusCode} for ${u}`));
+          return;
+        }
+        res.pipe(file);
+        file.on('finish', () => { file.close(); resolve(); });
+      }).on('error', (err) => { file.close(); rmSync(dest, { force: true }); reject(err); });
+    };
+    doGet(url);
+  });
+}
+
 async function buildApk() {
   console.log('═══════════════════════════════════════════════════════════════');
-  console.log('📱 Building Erasify Native Android APK');
+  console.log('📱 Building Erasify — APK + AAB');
+  console.log('   Package: io.erasify.app  |  v1.0.4');
   console.log('═══════════════════════════════════════════════════════════════');
 
-  if (!existsSync(JAVAC)) throw new Error(`javac not found at ${JAVAC}`);
-  if (!existsSync(AAPT2)) throw new Error(`aapt2 not found at ${AAPT2}`);
+  if (!existsSync(JAVAC))       throw new Error(`javac not found at ${JAVAC}`);
+  if (!existsSync(AAPT2))       throw new Error(`aapt2 not found at ${AAPT2}`);
   if (!existsSync(ANDROID_JAR)) throw new Error(`android.jar not found at ${ANDROID_JAR}`);
 
-  // Clean and prepare directories
+  // Clean build directory
   if (existsSync(BUILD_DIR)) rmSync(BUILD_DIR, { recursive: true, force: true });
-  mkdirSync(BUILD_DIR, { recursive: true });
-  mkdirSync(join(BUILD_DIR, 'res', 'values'), { recursive: true });
-  mkdirSync(join(BUILD_DIR, 'res', 'drawable'), { recursive: true });
-  mkdirSync(join(BUILD_DIR, 'gen'), { recursive: true });
-  mkdirSync(join(BUILD_DIR, 'bin'), { recursive: true });
-  mkdirSync(join(BUILD_DIR, 'dex'), { recursive: true });
-  mkdirSync(join(BUILD_DIR, 'src', 'io', 'erasify', 'app'), { recursive: true });
+  for (const sub of ['res/values', 'res/drawable', 'gen', 'bin', 'dex', 'src/io/erasify/app']) {
+    mkdirSync(join(BUILD_DIR, sub), { recursive: true });
+  }
+  mkdirSync(TOOLS_DIR, { recursive: true });
 
-  // 1. AndroidManifest.xml
-  const manifestContent = `<?xml version="1.0" encoding="utf-8"?>
+  // ── AndroidManifest.xml ────────────────────────────────────────────────────
+  const MANIFEST_PATH = join(BUILD_DIR, 'AndroidManifest.xml');
+  writeFileSync(MANIFEST_PATH, `<?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="io.erasify.app"
     android:versionCode="5"
@@ -74,10 +112,8 @@ async function buildApk() {
 
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
-    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"
-        android:maxSdkVersion="32" />
-    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"
-        android:maxSdkVersion="28" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" android:maxSdkVersion="32" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" android:maxSdkVersion="28" />
     <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
     <uses-permission android:name="android.permission.READ_MEDIA_VIDEO" />
 
@@ -101,28 +137,25 @@ async function buildApk() {
             </intent-filter>
         </activity>
     </application>
-</manifest>`;
-  writeFileSync(join(BUILD_DIR, 'AndroidManifest.xml'), manifestContent, 'utf8');
+</manifest>`, 'utf8');
 
-  // 2. Resources: strings.xml
-  const stringsContent = `<?xml version="1.0" encoding="utf-8"?>
+  // ── strings.xml ────────────────────────────────────────────────────────────
+  writeFileSync(join(BUILD_DIR, 'res', 'values', 'strings.xml'), `<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Erasify</string>
-</resources>`;
-  writeFileSync(join(BUILD_DIR, 'res', 'values', 'strings.xml'), stringsContent, 'utf8');
+</resources>`, 'utf8');
 
-  // 3. Icon
-  const iconCandidates = [
+  // ── Icon ───────────────────────────────────────────────────────────────────
+  for (const src of [
     join(ROOT_DIR, 'dist', 'extension', 'assets', 'icon-128.png'),
     join(ROOT_DIR, 'dist', 'extension', 'assets', 'icon-48.png'),
     join(ROOT_DIR, 'public', 'logo.png')
-  ];
-  for (const src of iconCandidates) {
+  ]) {
     if (existsSync(src)) { copyFileSync(src, join(BUILD_DIR, 'res', 'drawable', 'icon.png')); break; }
   }
 
-  // 4. MainActivity.java — Native bottom nav bar (no HTML/CSS nav, pure Android views)
-  const javaContent = `package io.erasify.app;
+  // ── MainActivity.java ──────────────────────────────────────────────────────
+  writeFileSync(join(BUILD_DIR, 'src', 'io', 'erasify', 'app', 'MainActivity.java'), `package io.erasify.app;
 
 import android.app.Activity;
 import android.content.Intent;
@@ -156,41 +189,31 @@ public class MainActivity extends Activity {
         "https://erasify-nine.vercel.app/video-remover.html",
         "https://erasify-nine.vercel.app/profile.html"
     };
-    private static final String[] TAB_KEYS = { "app.html", "image-remover", "video-remover", "profile" };
-    private static final String[] TAB_ICONS = { "\\uD83C\\uDFE0", "\\uD83D\\uDDBC", "\\uD83C\\uDFAC", "\\uD83D\\uDC64" };
+    private static final String[] TAB_KEYS  = { "app.html", "image-remover", "video-remover", "profile" };
+    private static final String[] TAB_ICONS  = { "\\uD83C\\uDFE0", "\\uD83D\\uDDBC", "\\uD83C\\uDFAC", "\\uD83D\\uDC64" };
     private static final String[] TAB_LABELS = { "Home", "Image", "Video", "Profile" };
-    private static final String C_ACTIVE = "#10b981";
+    private static final String C_ACTIVE   = "#10b981";
     private static final String C_INACTIVE = "#6b7280";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         requestWindowFeature(Window.FEATURE_NO_TITLE);
-        getWindow().setFlags(
-            WindowManager.LayoutParams.FLAG_FULLSCREEN,
-            WindowManager.LayoutParams.FLAG_FULLSCREEN
-        );
+        getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
 
-        // Root: vertical LinearLayout (WebView takes all space, nav fixed at bottom)
         LinearLayout root = new LinearLayout(this);
         root.setOrientation(LinearLayout.VERTICAL);
         root.setBackgroundColor(Color.parseColor("#040806"));
 
-        // WebView — flex-grows to fill all space above nav
         webView = new WebView(this);
-        root.addView(webView, new LinearLayout.LayoutParams(
-            LinearLayout.LayoutParams.MATCH_PARENT, 0, 1f
-        ));
+        root.addView(webView, new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, 0, 1f));
 
-        // Native bottom nav bar
         tabViews = new LinearLayout[TAB_LABELS.length];
         LinearLayout bottomNav = new LinearLayout(this);
         bottomNav.setOrientation(LinearLayout.HORIZONTAL);
         bottomNav.setBackgroundColor(Color.parseColor("#06100a"));
         bottomNav.setPadding(0, dp(1), 0, 0);
-        root.addView(bottomNav, new LinearLayout.LayoutParams(
-            LinearLayout.LayoutParams.MATCH_PARENT, dp(68)
-        ));
+        root.addView(bottomNav, new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, dp(68)));
 
         for (int i = 0; i < TAB_LABELS.length; i++) {
             final int idx = i;
@@ -220,14 +243,12 @@ public class MainActivity extends Activity {
             tab.setOnClickListener(new View.OnClickListener() {
                 @Override public void onClick(View v) { navigateTo(idx); }
             });
-
             tabViews[i] = tab;
             bottomNav.addView(tab);
         }
 
         setContentView(root);
 
-        // WebView settings
         WebSettings ws = webView.getSettings();
         ws.setJavaScriptEnabled(true);
         ws.setDomStorageEnabled(true);
@@ -257,9 +278,7 @@ public class MainActivity extends Activity {
                     try { startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(url))); return true; }
                     catch (Exception e) { return false; }
                 }
-                if (url.contains("erasify") || url.contains("vercel.app")) {
-                    view.loadUrl(url); return true;
-                }
+                if (url.contains("erasify") || url.contains("vercel.app")) { view.loadUrl(url); return true; }
                 try { startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(url))); }
                 catch (Exception e) { view.loadUrl(url); }
                 return true;
@@ -268,33 +287,21 @@ public class MainActivity extends Activity {
             @Override
             public void onPageFinished(WebView view, String url) {
                 super.onPageFinished(view, url);
-                // Strip ALL website chrome: header, footer, mobile drawer, OWN bottom bar
                 String css =
-                    // Hide website header & hamburger
                     "header.app-header,nav.header-nav,.navbar,.app-header," +
                     ".mobile-menu-btn,#mobileMenu,.header-actions{display:none!important}" +
-                    // Hide website's own bottom tab bar (the one with huge SVG icons)
                     "nav.bottom-app-bar,.bottom-app-bar,.bottom-tab{display:none!important}" +
-                    // Hide mobile drawer & backdrop
                     ".mobile-drawer,.mobile-backdrop,.mobile-nav,.mobile-overlay{display:none!important}" +
-                    // Hide footer
                     "footer,.app-footer,.mobile-bottom-dock,.bottom-dock{display:none!important}" +
-                    // Fix body padding (header was 72px, bottom bar was 68px)
                     "body{padding-top:0!important;padding-bottom:0!important;margin-top:0!important}" +
-                    // Fix hero section which had padding-top for the header
                     ".hero{padding-top:20px!important}" +
                     ".hero-section,.page-hero,.hero.container{padding-top:20px!important}" +
-                    // Fix main content area
                     "main.flex-grow{padding-bottom:4px!important}";
                 view.evaluateJavascript(
-                    "(function(){" +
-                    "var s=document.getElementById('__gx__');" +
+                    "(function(){var s=document.getElementById('__gx__');" +
                     "if(!s){s=document.createElement('style');s.id='__gx__';document.head.appendChild(s);}" +
-                    "s.textContent='" + css + "';" +
-                    "})()", null
+                    "s.textContent='" + css + "';})()", null
                 );
-
-                // Sync native tab highlight with current URL
                 if (url != null) {
                     for (int i = 0; i < TAB_KEYS.length; i++) {
                         final boolean active = url.contains(TAB_KEYS[i]);
@@ -338,9 +345,7 @@ public class MainActivity extends Activity {
         ((TextView) tabViews[idx].getChildAt(1)).setTextColor(color);
     }
 
-    private int dp(int v) {
-        return (int)(v * getResources().getDisplayMetrics().density);
-    }
+    private int dp(int v) { return (int)(v * getResources().getDisplayMetrics().density); }
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent intent) {
@@ -358,58 +363,59 @@ public class MainActivity extends Activity {
 
     @Override
     public boolean onKeyDown(int keyCode, KeyEvent event) {
-        if (keyCode == KeyEvent.KEYCODE_BACK && webView.canGoBack()) {
-            webView.goBack(); return true;
-        }
+        if (keyCode == KeyEvent.KEYCODE_BACK && webView.canGoBack()) { webView.goBack(); return true; }
         return super.onKeyDown(keyCode, event);
     }
 
-    @Override protected void onResume() { super.onResume(); webView.onResume(); CookieManager.getInstance().flush(); }
-    @Override protected void onPause() { super.onPause(); webView.onPause(); CookieManager.getInstance().flush(); }
+    @Override protected void onResume()  { super.onResume();  webView.onResume();  CookieManager.getInstance().flush(); }
+    @Override protected void onPause()   { super.onPause();   webView.onPause();   CookieManager.getInstance().flush(); }
     @Override protected void onDestroy() { webView.destroy(); super.onDestroy(); }
 }
-`;
-  writeFileSync(join(BUILD_DIR, 'src', 'io', 'erasify', 'app', 'MainActivity.java'), javaContent, 'utf8');
+`, 'utf8');
 
-  // Step 1: aapt2 compile
+  // ═══════════════════════════════════════════════════════════════
+  // STEP 1: aapt2 compile
+  // ═══════════════════════════════════════════════════════════════
   const compiledResZip = join(BUILD_DIR, 'compiled_res.zip');
   run(`"${AAPT2}" compile --dir "${join(BUILD_DIR, 'res')}" -o "${compiledResZip}"`, 'Compiling Resources');
 
-  // Step 2: aapt2 link
+  // ═══════════════════════════════════════════════════════════════
+  // STEP 2: aapt2 link (standard — for APK + R.java generation)
+  // ═══════════════════════════════════════════════════════════════
   const unalignedApk = join(BUILD_DIR, 'unaligned.apk');
   run(
-    `"${AAPT2}" link -I "${ANDROID_JAR}" --manifest "${join(BUILD_DIR, 'AndroidManifest.xml')}" -o "${unalignedApk}" "${compiledResZip}" --java "${join(BUILD_DIR, 'gen')}" --auto-add-overlay`,
+    `"${AAPT2}" link -I "${ANDROID_JAR}" --manifest "${MANIFEST_PATH}" -o "${unalignedApk}" "${compiledResZip}" --java "${join(BUILD_DIR, 'gen')}" --auto-add-overlay`,
     'Linking Resources & Generating R.java'
   );
 
-  // Step 3: Compile Java
-  const rJava = join(BUILD_DIR, 'gen', 'io', 'erasify', 'app', 'R.java');
+  // ═══════════════════════════════════════════════════════════════
+  // STEP 3: Compile Java
+  // ═══════════════════════════════════════════════════════════════
+  const rJava   = join(BUILD_DIR, 'gen', 'io', 'erasify', 'app', 'R.java');
   const mainJava = join(BUILD_DIR, 'src', 'io', 'erasify', 'app', 'MainActivity.java');
   run(
     `"${JAVAC}" -encoding UTF-8 -source 8 -target 8 -cp "${ANDROID_JAR}" -d "${join(BUILD_DIR, 'bin')}" "${rJava}" "${mainJava}"`,
-    'Compiling Java Classes'
+    'Compiling Java'
   );
 
-  // Step 4: Find ALL .class files (handles any number of anonymous classes)
+  // ═══════════════════════════════════════════════════════════════
+  // STEP 4: d8 → classes.dex
+  // ═══════════════════════════════════════════════════════════════
   const classFiles = findClassFiles(join(BUILD_DIR, 'bin'));
-  console.log(`\n📦 Found ${classFiles.length} class files for DEX compilation`);
-
+  console.log(`\n📦 Found ${classFiles.length} class files`);
   run(
     `"${D8}" --lib "${ANDROID_JAR}" --output "${join(BUILD_DIR, 'dex')}" ${classFiles.map(f => `"${f}"`).join(' ')}`,
-    'Compiling DEX with d8'
+    'Compiling DEX'
   );
 
-  // Step 5: Add classes.dex into unaligned.apk
-  run(
-    `"${JAR_TOOL}" uf "${unalignedApk}" -C "${join(BUILD_DIR, 'dex')}" classes.dex`,
-    'Packaging DEX into APK'
-  );
+  // ═══════════════════════════════════════════════════════════════
+  // STEP 5-9: Package APK → zipalign → sign
+  // ═══════════════════════════════════════════════════════════════
+  run(`"${JAR_TOOL}" uf "${unalignedApk}" -C "${join(BUILD_DIR, 'dex')}" classes.dex`, 'Packaging DEX into APK');
 
-  // Step 6: Zipalign
   const alignedApk = join(BUILD_DIR, 'aligned.apk');
-  run(`"${ZIPALIGN}" -f -p 4 "${unalignedApk}" "${alignedApk}"`, 'Aligning APK');
+  run(`"${ZIPALIGN}" -f -p 4 "${unalignedApk}" "${alignedApk}"`, 'Zipalign');
 
-  // Step 7: Generate Keystore if needed
   const keystorePath = join(BUILD_DIR, 'erasify.keystore');
   if (!existsSync(keystorePath)) {
     run(
@@ -418,30 +424,107 @@ public class MainActivity extends Activity {
     );
   }
 
-  // Step 8: Sign
   const finalApk = join(ROOT_DIR, 'Erasify.apk');
   run(
     `"${APKSIGNER}" sign --ks "${keystorePath}" --ks-key-alias erasify --ks-pass pass:erasify123 --key-pass pass:erasify123 --out "${finalApk}" "${alignedApk}"`,
     'Signing APK'
   );
+  run(`"${APKSIGNER}" verify "${finalApk}"`, 'Verifying APK');
 
-  // Step 9: Verify
-  run(`"${APKSIGNER}" verify "${finalApk}"`, 'Verifying APK Signature');
+  copyFileSync(finalApk, join(ROOT_DIR, 'public', 'Erasify.apk'));
+  if (existsSync(join(ROOT_DIR, 'dist'))) copyFileSync(finalApk, join(ROOT_DIR, 'dist', 'Erasify.apk'));
+  console.log(`\n✅ APK → ${finalApk} (${(statSync(finalApk).size / 1024).toFixed(1)} KB)`);
 
-  // Copy to public/dist
-  const publicApk = join(ROOT_DIR, 'public', 'Erasify.apk');
-  const distApk = join(ROOT_DIR, 'dist', 'Erasify.apk');
-  copyFileSync(finalApk, publicApk);
-  if (existsSync(join(ROOT_DIR, 'dist'))) copyFileSync(finalApk, distApk);
-
-  const stat = statSync(finalApk);
+  // ═══════════════════════════════════════════════════════════════
+  // AAB BUILD — for Google Play Store
+  // ═══════════════════════════════════════════════════════════════
   console.log('\n═══════════════════════════════════════════════════════════════');
-  console.log(`🎉 SUCCESS! Native Android APK Generated:`);
-  console.log(`📦 File: ${finalApk} (${(stat.size / 1024).toFixed(1)} KB)`);
+  console.log('📦 Building Android App Bundle (AAB) for Google Play Store');
+  console.log('═══════════════════════════════════════════════════════════════');
+
+  // Download bundletool if not cached
+  if (!existsSync(BUNDLETOOL_JAR)) {
+    console.log(`\n⬇️  Downloading bundletool v${BUNDLETOOL_VERSION} (one-time)...`);
+    await downloadFile(
+      `https://github.com/google/bundletool/releases/download/${BUNDLETOOL_VERSION}/bundletool-all-${BUNDLETOOL_VERSION}.jar`,
+      BUNDLETOOL_JAR
+    );
+    console.log('✅ bundletool downloaded');
+  } else {
+    console.log(`\n✅ bundletool cached at ${BUNDLETOOL_JAR}`);
+  }
+
+  // AAB-A: aapt2 link with --proto-format (required by bundletool)
+  const protoApk = join(BUILD_DIR, 'proto.apk');
+  run(
+    `"${AAPT2}" link --proto-format -I "${ANDROID_JAR}" --manifest "${MANIFEST_PATH}" -o "${protoApk}" "${compiledResZip}" --auto-add-overlay`,
+    'AAB: Proto-format link'
+  );
+
+  // AAB-B: Extract proto APK
+  const protoDir = join(BUILD_DIR, 'proto-contents');
+  if (existsSync(protoDir)) rmSync(protoDir, { recursive: true });
+  mkdirSync(protoDir, { recursive: true });
+  console.log('\n▶ [AAB: Extracting proto APK]');
+  execSync(
+    `powershell -noprofile -command "Expand-Archive -Path '${protoApk}' -DestinationPath '${protoDir}' -Force"`,
+    { stdio: 'inherit', cwd: ROOT_DIR }
+  );
+
+  // AAB-C: Build bundletool base module directory structure
+  const baseModDir = join(BUILD_DIR, 'base-module');
+  if (existsSync(baseModDir)) rmSync(baseModDir, { recursive: true });
+  mkdirSync(join(baseModDir, 'manifest'), { recursive: true });
+  mkdirSync(join(baseModDir, 'dex'),      { recursive: true });
+  mkdirSync(join(baseModDir, 'root'),     { recursive: true });
+
+  // manifest/ — proto-binary AndroidManifest.xml
+  copyFileSync(join(protoDir, 'AndroidManifest.xml'), join(baseModDir, 'manifest', 'AndroidManifest.xml'));
+  // dex/ — compiled classes
+  copyFileSync(join(BUILD_DIR, 'dex', 'classes.dex'), join(baseModDir, 'dex', 'classes.dex'));
+  // resources.pb — proto resource table
+  if (existsSync(join(protoDir, 'resources.pb'))) {
+    copyFileSync(join(protoDir, 'resources.pb'), join(baseModDir, 'resources.pb'));
+  }
+  // res/ — proto-format resources
+  if (existsSync(join(protoDir, 'res'))) {
+    copyDirSync(join(protoDir, 'res'), join(baseModDir, 'res'));
+  }
+
+  // AAB-D: Create base.zip module archive
+  const baseZip = join(BUILD_DIR, 'base.zip');
+  if (existsSync(baseZip)) rmSync(baseZip);
+  run(`"${JAR_TOOL}" cf "${baseZip}" -C "${baseModDir}" .`, 'AAB: Creating base module ZIP');
+
+  // AAB-E: Build AAB with bundletool
+  const aabPath = join(ROOT_DIR, 'Erasify.aab');
+  if (existsSync(aabPath)) rmSync(aabPath);
+  run(
+    `"${JAVA_EXE}" -jar "${BUNDLETOOL_JAR}" build-bundle --modules="${baseZip}" --output="${aabPath}"`,
+    'AAB: Building with bundletool'
+  );
+
+  // AAB-F: Sign AAB with jarsigner
+  run(
+    `"${JARSIGNER}" -verbose -sigalg SHA256withRSA -digestalg SHA-256 -keystore "${keystorePath}" -storepass erasify123 -keypass erasify123 "${aabPath}" erasify`,
+    'AAB: Signing with jarsigner'
+  );
+
+  // Copy AAB to output dirs
+  copyFileSync(aabPath, join(ROOT_DIR, 'public', 'Erasify.aab'));
+  if (existsSync(join(ROOT_DIR, 'dist'))) copyFileSync(aabPath, join(ROOT_DIR, 'dist', 'Erasify.aab'));
+
+  const aabStat = statSync(aabPath);
+  console.log('\n═══════════════════════════════════════════════════════════════');
+  console.log('🎉 SUCCESS!');
+  console.log(`📱 APK  → ${finalApk} (${(statSync(finalApk).size / 1024).toFixed(1)} KB)`);
+  console.log(`📦 AAB  → ${aabPath} (${(aabStat.size / 1024).toFixed(1)} KB)`);
+  console.log('🏷️  Package: io.erasify.app');
+  console.log('📋 Version: 1.0.4 (code 5)');
   console.log('═══════════════════════════════════════════════════════════════\n');
 }
 
 buildApk().catch(err => {
-  console.error('\n❌ APK Build failed:', err);
+  console.error('\n❌ Build failed:', err.message || err);
   process.exit(1);
 });

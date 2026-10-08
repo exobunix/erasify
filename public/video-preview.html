@@ -523,6 +523,10 @@
               <button id="processBtn" class="primary" type="button">Auto Export Watermark-Free Video</button>
               <a id="downloadBtn" class="download-link" aria-disabled="true">Download Result</a>
             </div>
+            <label style="display:flex;align-items:center;gap:8px;font-size:12px;margin-top:10px;cursor:pointer;">
+              <input id="allowLowConfidence" type="checkbox">
+              <span>Allow low-confidence export (process faint watermarks)</span>
+            </label>
             <div class="internal-controls" hidden>
               <span id="alphaGainValue">1.00</span>
               <input id="alphaGain" type="range" min="0.25" max="1.35" step="0.05">
@@ -547,7 +551,6 @@
               <input id="residualCleanup" type="range" min="0" max="1.80" step="0.05">
               <input id="sampleCount" type="number" min="4" max="24" step="1">
               <input id="videoBitrateMbps" type="number" min="1" max="80" step="0.5">
-              <input id="allowLowConfidence" type="checkbox">
             </div>
           </div>
           <div class="note">Export re-encodes the video track and passes through the audio track if MP4 supports the original audio encoding.</div>
