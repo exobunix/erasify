@@ -84,7 +84,7 @@ function downloadFile(url, dest) {
 async function buildApk() {
   console.log('═══════════════════════════════════════════════════════════════');
   console.log('📱 Building Erasify — APK + AAB');
-  console.log('   Package: io.erasify.app  |  v1.0.6 (code 7)  |  targetSdk: 36  |  minSdk: 24');
+  console.log('   Package: io.erasify.app  |  v1.0.7 (code 8)  |  targetSdk: 36  |  minSdk: 24');
   console.log('═══════════════════════════════════════════════════════════════');
 
   if (!existsSync(JAVAC))       throw new Error(`javac not found at ${JAVAC}`);
@@ -103,19 +103,16 @@ async function buildApk() {
   writeFileSync(MANIFEST_PATH, `<?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="io.erasify.app"
-    android:versionCode="7"
-    android:versionName="1.0.6">
+    android:versionCode="8"
+    android:versionName="1.0.7">
 
     <uses-sdk
         android:minSdkVersion="24"
         android:targetSdkVersion="36" />
 
+    <!-- Google Play Compliant: Only internet permissions required. Photo Picker handles media access with zero storage permissions. -->
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
-    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" android:maxSdkVersion="32" />
-    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" android:maxSdkVersion="28" />
-    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
-    <uses-permission android:name="android.permission.READ_MEDIA_VIDEO" />
 
     <application
         android:label="@string/app_name"
@@ -158,10 +155,13 @@ async function buildApk() {
   writeFileSync(join(BUILD_DIR, 'src', 'io', 'erasify', 'app', 'MainActivity.java'), `package io.erasify.app;
 
 import android.app.Activity;
+import android.content.ClipData;
 import android.content.Intent;
 import android.graphics.Color;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
+import android.provider.MediaStore;
 import android.view.KeyEvent;
 import android.view.Window;
 import android.view.WindowManager;
@@ -232,14 +232,101 @@ public class MainActivity extends Activity {
             @Override
             public boolean onShowFileChooser(WebView wv, ValueCallback<Uri[]> filePathCallback,
                                              FileChooserParams params) {
-                if (uploadMessage != null) { uploadMessage.onReceiveValue(null); uploadMessage = null; }
+                if (uploadMessage != null) {
+                    uploadMessage.onReceiveValue(null);
+                    uploadMessage = null;
+                }
                 uploadMessage = filePathCallback;
-                Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
-                intent.addCategory(Intent.CATEGORY_OPENABLE);
-                intent.setType("*/*");
-                intent.putExtra(Intent.EXTRA_MIME_TYPES, new String[]{"image/*", "video/*"});
-                try { startActivityForResult(Intent.createChooser(intent, "Select Media"), FILECHOOSER_RESULTCODE); }
-                catch (Exception e) { uploadMessage = null; return false; }
+
+                String[] acceptTypes = (params != null) ? params.getAcceptTypes() : null;
+                boolean isVideoOnly = false;
+                boolean isImageOnly = false;
+                if (acceptTypes != null && acceptTypes.length > 0) {
+                    for (String type : acceptTypes) {
+                        if (type != null) {
+                            String lower = type.toLowerCase().trim();
+                            if (lower.contains("video")) {
+                                isVideoOnly = true;
+                            } else if (lower.contains("image")) {
+                                isImageOnly = true;
+                            }
+                        }
+                    }
+                }
+                if (isImageOnly && isVideoOnly) {
+                    isImageOnly = false;
+                    isVideoOnly = false;
+                }
+
+                boolean allowMultiple = (params != null &&
+                    params.getMode() == WebChromeClient.FileChooserParams.MODE_OPEN_MULTIPLE);
+
+                Intent pickerIntent = null;
+
+                // 1. Android System Photo Picker (API 33+ / Android 13+)
+                // Zero storage permissions required: grants granular URI read permission
+                if (Build.VERSION.SDK_INT >= 33) {
+                    try {
+                        pickerIntent = new Intent(MediaStore.ACTION_PICK_IMAGES);
+                        if (isImageOnly) {
+                            pickerIntent.setType("image/*");
+                        } else if (isVideoOnly) {
+                            pickerIntent.setType("video/*");
+                        }
+                        if (allowMultiple) {
+                            pickerIntent.putExtra(MediaStore.EXTRA_PICK_IMAGES_MAX, 10);
+                        }
+                    } catch (Exception e) {
+                        pickerIntent = null;
+                    }
+                }
+
+                // 2. Storage Access Framework (SAF) Document Picker fallback
+                if (pickerIntent == null) {
+                    try {
+                        pickerIntent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
+                        pickerIntent.addCategory(Intent.CATEGORY_OPENABLE);
+                        if (isImageOnly) {
+                            pickerIntent.setType("image/*");
+                        } else if (isVideoOnly) {
+                            pickerIntent.setType("video/*");
+                        } else {
+                            pickerIntent.setType("*/*");
+                            pickerIntent.putExtra(Intent.EXTRA_MIME_TYPES, new String[]{"image/*", "video/*"});
+                        }
+                        if (allowMultiple) {
+                            pickerIntent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true);
+                        }
+                    } catch (Exception e) {
+                        pickerIntent = null;
+                    }
+                }
+
+                // 3. System GET_CONTENT fallback for compatibility
+                if (pickerIntent == null) {
+                    pickerIntent = new Intent(Intent.ACTION_GET_CONTENT);
+                    pickerIntent.addCategory(Intent.CATEGORY_OPENABLE);
+                    if (isImageOnly) {
+                        pickerIntent.setType("image/*");
+                    } else if (isVideoOnly) {
+                        pickerIntent.setType("video/*");
+                    } else {
+                        pickerIntent.setType("*/*");
+                        pickerIntent.putExtra(Intent.EXTRA_MIME_TYPES, new String[]{"image/*", "video/*"});
+                    }
+                    if (allowMultiple) {
+                        pickerIntent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true);
+                    }
+                }
+
+                pickerIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+
+                try {
+                    startActivityForResult(pickerIntent, FILECHOOSER_RESULTCODE);
+                } catch (Exception e) {
+                    uploadMessage = null;
+                    return false;
+                }
                 return true;
             }
         });
@@ -262,8 +349,26 @@ public class MainActivity extends Activity {
             if (uploadMessage == null) return;
             Uri[] results = null;
             if (resultCode == RESULT_OK && intent != null) {
-                String d = intent.getDataString();
-                if (d != null) results = new Uri[]{Uri.parse(d)};
+                ClipData clipData = intent.getClipData();
+                if (clipData != null) {
+                    int count = clipData.getItemCount();
+                    results = new Uri[count];
+                    for (int i = 0; i < count; i++) {
+                        Uri uri = clipData.getItemAt(i).getUri();
+                        if (uri != null) {
+                            try {
+                                grantUriPermission(getPackageName(), uri, Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                            } catch (Exception ignored) {}
+                            results[i] = uri;
+                        }
+                    }
+                } else if (intent.getData() != null) {
+                    Uri uri = intent.getData();
+                    try {
+                        grantUriPermission(getPackageName(), uri, Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                    } catch (Exception ignored) {}
+                    results = new Uri[]{uri};
+                }
             }
             uploadMessage.onReceiveValue(results);
             uploadMessage = null;
@@ -425,7 +530,7 @@ public class MainActivity extends Activity {
   console.log(`📱 APK  → ${finalApk} (${(statSync(finalApk).size / 1024).toFixed(1)} KB)`);
   console.log(`📦 AAB  → ${aabPath} (${(aabStat.size / 1024).toFixed(1)} KB)`);
   console.log('🏷️  Package: io.erasify.app');
-  console.log('📋 Version: 1.0.6 (code 7) | targetSdkVersion: 36 | minSdkVersion: 24');
+  console.log('📋 Version: 1.0.7 (code 8) | targetSdkVersion: 36 | Photo Picker: Active');
   console.log('═══════════════════════════════════════════════════════════════\n');
 }
 
