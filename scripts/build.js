@@ -158,6 +158,7 @@ function cleanDistBuildOutputs() {
     'pricing.html',
     'contact.html',
     'profile.html',
+    'privacy.html',
     'erasify.css',
     'erasify.js',
     'manifest.json',

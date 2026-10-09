@@ -264,6 +264,9 @@ app.get(['/video%20remover.html', '/video remover.html', '/video_remover.html', 
 app.get(['/image%20remover.html', '/image remover.html', '/image_remover.html', '/image'], (req, res) => {
     res.redirect(301, '/image-remover.html');
 });
+app.get(['/privacy', '/privacy-policy'], (req, res) => {
+    res.redirect(301, '/privacy.html');
+});
 
 // Serve static files (prefer fresh public assets, then dist bundles)
 app.use(express.static(path.join(__dirname, 'public')));
