@@ -15,12 +15,12 @@ const JAVA_EXE = join(JDK_BIN, 'java.exe');
 const JARSIGNER = join(JDK_BIN, 'jarsigner.exe');
 
 const SDK_ROOT    = 'C:\\Users\\Adarsh\\AppData\\Local\\Android\\Sdk';
-const BUILD_TOOLS = join(SDK_ROOT, 'build-tools', '35.0.0');
+const BUILD_TOOLS = join(SDK_ROOT, 'build-tools', '36.0.0');
 const AAPT2       = join(BUILD_TOOLS, 'aapt2.exe');
 const D8          = join(BUILD_TOOLS, 'd8.bat');
 const ZIPALIGN    = join(BUILD_TOOLS, 'zipalign.exe');
 const APKSIGNER   = join(BUILD_TOOLS, 'apksigner.bat');
-const ANDROID_JAR = join(SDK_ROOT, 'platforms', 'android-34', 'android.jar');
+const ANDROID_JAR = join(SDK_ROOT, 'platforms', 'android-36', 'android.jar');
 
 const BUNDLETOOL_VERSION = '1.15.6';
 const BUNDLETOOL_JAR = join(TOOLS_DIR, `bundletool-all-${BUNDLETOOL_VERSION}.jar`);
@@ -84,7 +84,7 @@ function downloadFile(url, dest) {
 async function buildApk() {
   console.log('═══════════════════════════════════════════════════════════════');
   console.log('📱 Building Erasify — APK + AAB');
-  console.log('   Package: io.erasify.app  |  v1.0.5 (code 6)  |  minSdk: 24');
+  console.log('   Package: io.erasify.app  |  v1.0.6 (code 7)  |  targetSdk: 36  |  minSdk: 24');
   console.log('═══════════════════════════════════════════════════════════════');
 
   if (!existsSync(JAVAC))       throw new Error(`javac not found at ${JAVAC}`);
@@ -103,12 +103,12 @@ async function buildApk() {
   writeFileSync(MANIFEST_PATH, `<?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="io.erasify.app"
-    android:versionCode="6"
-    android:versionName="1.0.5">
+    android:versionCode="7"
+    android:versionName="1.0.6">
 
     <uses-sdk
         android:minSdkVersion="24"
-        android:targetSdkVersion="34" />
+        android:targetSdkVersion="36" />
 
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
@@ -425,7 +425,7 @@ public class MainActivity extends Activity {
   console.log(`📱 APK  → ${finalApk} (${(statSync(finalApk).size / 1024).toFixed(1)} KB)`);
   console.log(`📦 AAB  → ${aabPath} (${(aabStat.size / 1024).toFixed(1)} KB)`);
   console.log('🏷️  Package: io.erasify.app');
-  console.log('📋 Version: 1.0.5 (code 6) | minSdkVersion: 24 (Android 7.0+)');
+  console.log('📋 Version: 1.0.6 (code 7) | targetSdkVersion: 36 | minSdkVersion: 24');
   console.log('═══════════════════════════════════════════════════════════════\n');
 }
 
