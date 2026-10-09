@@ -84,7 +84,7 @@ function downloadFile(url, dest) {
 async function buildApk() {
   console.log('═══════════════════════════════════════════════════════════════');
   console.log('📱 Building Erasify — APK + AAB');
-  console.log('   Package: io.erasify.app  |  v1.0.4');
+  console.log('   Package: io.erasify.app  |  v1.0.5 (code 6)  |  minSdk: 24');
   console.log('═══════════════════════════════════════════════════════════════');
 
   if (!existsSync(JAVAC))       throw new Error(`javac not found at ${JAVAC}`);
@@ -103,11 +103,11 @@ async function buildApk() {
   writeFileSync(MANIFEST_PATH, `<?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="io.erasify.app"
-    android:versionCode="5"
-    android:versionName="1.0.4">
+    android:versionCode="6"
+    android:versionName="1.0.5">
 
     <uses-sdk
-        android:minSdkVersion="21"
+        android:minSdkVersion="24"
         android:targetSdkVersion="34" />
 
     <uses-permission android:name="android.permission.INTERNET" />
@@ -309,7 +309,7 @@ public class MainActivity extends Activity {
   const classFiles = findClassFiles(join(BUILD_DIR, 'bin'));
   console.log(`\n📦 Found ${classFiles.length} class files`);
   run(
-    `"${D8}" --lib "${ANDROID_JAR}" --output "${join(BUILD_DIR, 'dex')}" ${classFiles.map(f => `"${f}"`).join(' ')}`,
+    `"${D8}" --lib "${ANDROID_JAR}" --min-api 24 --output "${join(BUILD_DIR, 'dex')}" ${classFiles.map(f => `"${f}"`).join(' ')}`,
     'Compiling DEX'
   );
 
@@ -425,7 +425,7 @@ public class MainActivity extends Activity {
   console.log(`📱 APK  → ${finalApk} (${(statSync(finalApk).size / 1024).toFixed(1)} KB)`);
   console.log(`📦 AAB  → ${aabPath} (${(aabStat.size / 1024).toFixed(1)} KB)`);
   console.log('🏷️  Package: io.erasify.app');
-  console.log('📋 Version: 1.0.4 (code 5)');
+  console.log('📋 Version: 1.0.5 (code 6) | minSdkVersion: 24 (Android 7.0+)');
   console.log('═══════════════════════════════════════════════════════════════\n');
 }
 
